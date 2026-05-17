@@ -1,6 +1,7 @@
 bin/
 obj/
 publish/
+private/
 
 .vs/
 .vscode/
@@ -14,7 +15,7 @@ publish/
 
 .env
 .env.*
-
+appsettings.Development.json
 appsettings.Local.json
 
 TestResults/
