@@ -1,6 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using RvPersonalFinance.Api.Infrastructure.Persistence;
 using RvPersonalFinance.Api.Features.Accounts;
+using Scalar.AspNetCore;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -10,6 +12,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 builder.Services.AddScoped<AccountService>();
 builder.Services.AddOpenApi();
+builder.Services.ConfigureHttpJsonOptions(options => options.SerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 
 var app = builder.Build();
 
@@ -17,6 +20,7 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
+    app.MapScalarApiReference();    
 }
 
 app.UseHttpsRedirection();
@@ -25,5 +29,7 @@ app.MapGet("/", () => new
 {
     status = "ok"
 }).WithName("HealthCheck");
+
+app.MapAccountEndpoints();
 
 app.Run();
