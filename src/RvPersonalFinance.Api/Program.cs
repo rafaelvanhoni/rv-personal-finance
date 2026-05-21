@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using RvPersonalFinance.Api.Infrastructure.Persistence;
+using RvPersonalFinance.Api.Features.Accounts;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -7,6 +8,7 @@ var builder = WebApplication.CreateBuilder(args);
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddDbContext<AppDbContext>(options => 
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+builder.Services.AddScoped<AccountService>();
 builder.Services.AddOpenApi();
 
 var app = builder.Build();
