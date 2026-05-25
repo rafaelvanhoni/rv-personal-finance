@@ -34,7 +34,7 @@ public class CategoryService
         return new OperationResult<Category>() { Data = category };
     }
 
-    public async Task<OperationResult<IEnumerable<Category>>> GetAll()
+    public async Task<OperationResult<IEnumerable<Category>>> GetAllCategories()
     {
         var categories = await _context.Categories.ToListAsync();
         _logger.LogInformation("Categories retrieved: {Count}", categories.Count);

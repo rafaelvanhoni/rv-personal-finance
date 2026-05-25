@@ -14,11 +14,11 @@ public static class TransactionEndpoints
 
         app.MapGet("/transactions", async (TransactionService service) =>
         {
-            var result = await service.GetAll();
+            var result = await service.GetAllTransactions();
             return result.ToHttpResult();
         });
 
-        app.MapPost("/transactions", async (CreateTransationDto dto, TransactionService service) =>
+        app.MapPost("/transactions", async (CreateTransactionDto dto, TransactionService service) =>
         {
             var result = await service.CreateTransaction(dto);
             if (result.IsSuccess)

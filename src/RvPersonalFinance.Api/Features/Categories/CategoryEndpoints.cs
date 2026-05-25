@@ -15,7 +15,7 @@ public static class CategoryEndpoints
 
         app.MapGet("/categories", async (CategoryService service) =>
         {
-            var result = await service.GetAll();
+            var result = await service.GetAllCategories();
             return result.ToHttpResult();
         });
 

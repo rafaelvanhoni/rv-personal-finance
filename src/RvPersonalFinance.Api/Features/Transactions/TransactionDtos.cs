@@ -2,7 +2,7 @@ using RvPersonalFinance.Api.Domain.Enums;
 
 namespace RvPersonalFinance.Api.Features.Transactions;
 
-public class CreateTransationDto
+public class CreateTransactionDto
 {
     public Guid UserId { get; set; }
     public Guid AccountId { get; set; }

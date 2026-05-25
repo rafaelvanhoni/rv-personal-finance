@@ -14,7 +14,7 @@ public static class AccountEndpoints
 
         app.MapGet("/accounts", async (AccountService service) =>
         {
-           var result = await service.GetAll();
+           var result = await service.GetAllAccounts();
            return result.ToHttpResult(); 
         });
 

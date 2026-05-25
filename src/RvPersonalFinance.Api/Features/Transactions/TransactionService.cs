@@ -34,7 +34,7 @@ public class TransactionService
 
     }
 
-    public async Task<OperationResult<IEnumerable<Transaction>>> GetAll()
+    public async Task<OperationResult<IEnumerable<Transaction>>> GetAllTransactions()
     {
         var transactions = await _context.Transactions.ToListAsync();
 
@@ -45,7 +45,7 @@ public class TransactionService
         };
     }
 
-    public async Task<OperationResult<Transaction>> CreateTransaction(CreateTransationDto dto)
+    public async Task<OperationResult<Transaction>> CreateTransaction(CreateTransactionDto dto)
     {
         var transaction = new Transaction()
         {

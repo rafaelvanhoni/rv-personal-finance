@@ -38,7 +38,7 @@ public class AccountService
         };
     }
 
-    public async Task<OperationResult<IEnumerable<Account>>> GetAll() 
+    public async Task<OperationResult<IEnumerable<Account>>> GetAllAccounts() 
     {
         var accounts = await _context.Accounts.ToListAsync();
         _logger.LogInformation(
