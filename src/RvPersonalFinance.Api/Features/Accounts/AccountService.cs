@@ -1,4 +1,3 @@
-using System.Linq;
 using Microsoft.EntityFrameworkCore;
 using RvPersonalFinance.Api.Domain.Entities;
 using RvPersonalFinance.Api.Infrastructure.Persistence;
@@ -78,15 +77,8 @@ public class AccountService
         var result = await GetAccountById(id);
 
         if (!result.IsSuccess)
-        {
-            return new OperationResult<Account>()
-            {
-                Status = result.Status,
-                Message = result.Message,
-                Data = result.Data
-            };
-        }
-
+            return result;
+            
         var account = result.Data!;
         account.UserId = dto.UserId;
         account.Name = dto.Name;
@@ -104,14 +96,7 @@ public class AccountService
     {
         var result = await GetAccountById(id);
         if (!result.IsSuccess)
-        {
-            return new OperationResult<Account>()
-            {
-                Status = result.Status,
-                Message = result.Message,
-                Data = result.Data
-            };
-        }   
+            return result;
 
         var account = result.Data!;
 

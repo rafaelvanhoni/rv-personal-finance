@@ -11,6 +11,6 @@ public class Transaction
     public string Description { get; set; } = string.Empty;
     public decimal Amount { get; set; }
     public TransactionType Type { get; set; }
-    public DateTime TransactionDate { get; set; }
-    public DateTime CreatedAt { get; set; }
+    public DateOnly TransactionDate { get; set; }
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }

@@ -21,6 +21,8 @@ public static class AccountEndpoints
         app.MapPost("/accounts", async (CreateAccountDto dto, AccountService service) =>
         {
             var result = await service.CreateAccount(dto);
+            if (result.IsSuccess)
+                return Results.Created($"/accounts/{result.Data?.Id}", result);
             return result.ToHttpResult();
         });
 

@@ -3,6 +3,8 @@ using RvPersonalFinance.Api.Infrastructure.Persistence;
 using RvPersonalFinance.Api.Features.Accounts;
 using Scalar.AspNetCore;
 using System.Text.Json.Serialization;
+using RvPersonalFinance.Api.Features.Categories;
+using RvPersonalFinance.Api.Features.Transactions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,6 +13,8 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<AppDbContext>(options => 
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 builder.Services.AddScoped<AccountService>();
+builder.Services.AddScoped<CategoryService>();
+builder.Services.AddScoped<TransactionService>();
 builder.Services.AddOpenApi();
 builder.Services.ConfigureHttpJsonOptions(options => options.SerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 
@@ -31,5 +35,7 @@ app.MapGet("/", () => new
 }).WithName("HealthCheck");
 
 app.MapAccountEndpoints();
+app.MapCategoryEndpoints();
+app.MapTransactionEndpoints();
 
 app.Run();
