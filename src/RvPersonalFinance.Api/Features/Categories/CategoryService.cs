@@ -1,3 +1,4 @@
+using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using RvPersonalFinance.Api.Domain.Entities;
 using RvPersonalFinance.Api.Infrastructure.Persistence;
@@ -9,11 +10,13 @@ public class CategoryService
 {
     private readonly AppDbContext _context;
     private readonly ILogger<CategoryService> _logger;
+    private readonly IValidator<CreateCategoryDto> _createValidator;
 
-    public CategoryService(AppDbContext context, ILogger<CategoryService> logger)
+    public CategoryService(AppDbContext context, ILogger<CategoryService> logger, IValidator<CreateCategoryDto> createValidator)
     {
         _context = context;
         _logger = logger;    
+        _createValidator = createValidator;
     }
 
     public async Task<OperationResult<Category>> GetCategoryById(Guid id)
@@ -44,6 +47,17 @@ public class CategoryService
 
     public async Task<OperationResult<Category>> CreateCategory(CreateCategoryDto dto)
     {
+        var validation = await _createValidator.ValidateAsync(dto);
+        if (!validation.IsValid)
+        {
+            _logger.LogWarning("Validation failed for CreateCategory: {Error}", validation.Errors.First().ErrorMessage);
+            return new OperationResult<Category>()
+            {
+                Status = ResultStatus.ValidationError,
+                Message = validation.Errors.First().ErrorMessage,
+            };
+        }
+
         var category = new Category()
         {
             UserId = dto.UserId,

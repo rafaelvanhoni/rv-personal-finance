@@ -1,10 +1,11 @@
 using Microsoft.EntityFrameworkCore;
-using RvPersonalFinance.Api.Infrastructure.Persistence;
-using RvPersonalFinance.Api.Features.Accounts;
 using Scalar.AspNetCore;
 using System.Text.Json.Serialization;
+using RvPersonalFinance.Api.Infrastructure.Persistence;
+using RvPersonalFinance.Api.Features.Accounts;
 using RvPersonalFinance.Api.Features.Categories;
 using RvPersonalFinance.Api.Features.Transactions;
+using FluentValidation;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,6 +14,9 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<AppDbContext>(options => 
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 builder.Services.AddScoped<AccountService>();
+builder.Services.AddScoped<IValidator<CreateAccountDto>, CreateAccountValidator>();
+builder.Services.AddScoped<IValidator<CreateCategoryDto>, CreateCategoryValidator>();
+builder.Services.AddScoped<IValidator<CreateTransactionDto>, CreateTransactionValidator>();
 builder.Services.AddScoped<CategoryService>();
 builder.Services.AddScoped<TransactionService>();
 builder.Services.AddOpenApi();

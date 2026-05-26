@@ -1,3 +1,4 @@
+using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using RvPersonalFinance.Api.Domain.Entities;
 using RvPersonalFinance.Api.Infrastructure.Persistence;
@@ -10,11 +11,13 @@ public class AccountService
 
     private readonly AppDbContext _context;
     private readonly ILogger<AccountService> _logger;
+    private readonly IValidator<CreateAccountDto> _createValidator;
 
-    public AccountService(AppDbContext context, ILogger<AccountService> logger)
+    public AccountService(AppDbContext context, ILogger<AccountService> logger, IValidator<CreateAccountDto> createValidator)
     {
         _context = context;
         _logger = logger;
+        _createValidator = createValidator;
     }
 
     public async Task<OperationResult<Account>> GetAccountById(Guid id)
@@ -53,6 +56,18 @@ public class AccountService
 
     public async Task<OperationResult<Account>> CreateAccount (CreateAccountDto dto)
     {
+
+        var validation = await _createValidator.ValidateAsync(dto);
+        if (!validation.IsValid)
+        {
+            _logger.LogWarning("Validation failed for CreateAccount: {Error}", validation.Errors.First().ErrorMessage);
+            return new OperationResult<Account>()
+            {
+                Status = ResultStatus.ValidationError,
+                Message = validation.Errors.First().ErrorMessage,
+            };
+        }        
+
         var account = new Account
         {
             UserId = dto.UserId,

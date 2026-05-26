@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using RvPersonalFinance.Api.Infrastructure.Persistence;
 using RvPersonalFinance.Api.Domain.Entities;
 using RvPersonalFinance.Api.Shared;
+using FluentValidation;
 
 namespace RvPersonalFinance.Api.Features.Transactions;
 
@@ -9,11 +10,13 @@ public class TransactionService
 {
     private readonly AppDbContext _context;
     private readonly ILogger<TransactionService> _logger;
+    private readonly IValidator<CreateTransactionDto> _createValidator;
     
-    public TransactionService(AppDbContext content, ILogger<TransactionService> logger)
+    public TransactionService(AppDbContext context, ILogger<TransactionService> logger, IValidator<CreateTransactionDto> createValidator)
     {
-        _context = content;
+        _context = context;
         _logger = logger;
+        _createValidator = createValidator;
     }   
 
     public async Task<OperationResult<Transaction>> GetTransactionById(Guid id)
@@ -47,6 +50,17 @@ public class TransactionService
 
     public async Task<OperationResult<Transaction>> CreateTransaction(CreateTransactionDto dto)
     {
+        var validation = await _createValidator.ValidateAsync(dto);
+        if (!validation.IsValid)
+        {
+            _logger.LogWarning("Validation failed for CreateTransaction: {Error}", validation.Errors.First().ErrorMessage);
+            return new OperationResult<Transaction>()
+            {
+                Status = ResultStatus.ValidationError,
+                Message = validation.Errors.First().ErrorMessage,
+            };
+        }
+
         var transaction = new Transaction()
         {
             UserId = dto.UserId,
