@@ -11,12 +11,14 @@ public class TransactionService
     private readonly AppDbContext _context;
     private readonly ILogger<TransactionService> _logger;
     private readonly IValidator<CreateTransactionDto> _createValidator;
+    private readonly IValidator<UpdateTransactionDto> _updateValidator;
     
-    public TransactionService(AppDbContext context, ILogger<TransactionService> logger, IValidator<CreateTransactionDto> createValidator)
+    public TransactionService(AppDbContext context, ILogger<TransactionService> logger, IValidator<CreateTransactionDto> createValidator, IValidator<UpdateTransactionDto> updateValidator)
     {
         _context = context;
         _logger = logger;
         _createValidator = createValidator;
+        _updateValidator = updateValidator;
     }   
 
     private async Task<Transaction?> GetTransactionByIdAsync(Guid id)
@@ -90,7 +92,8 @@ public class TransactionService
 
         var transactionResponseDto = ToResponseDto(transaction);
 
-        return new OperationResult<TransactionResponseDto>(){
+        return new OperationResult<TransactionResponseDto>()
+        {
             Status = ResultStatus.Created,
             Data = transactionResponseDto
         };
@@ -106,6 +109,17 @@ public class TransactionService
             {
                 Status = ResultStatus.NotFound,
                 Message = $"Transaction not found: {id}",
+            };
+        }
+
+        var validation = await _updateValidator.ValidateAsync(dto);
+        if (!validation.IsValid)
+        {
+            _logger.LogWarning("Validation failed for UpdateTransaction {TransactionId}. Error: {Error}", id, validation.Errors.First().ErrorMessage);
+            return new OperationResult<TransactionResponseDto>()
+            {
+                Status = ResultStatus.ValidationError,
+                Message = validation.Errors.First().ErrorMessage,
             };
         }
 
@@ -139,11 +153,11 @@ public class TransactionService
             };
         }
 
+        var transactionResponseDto = ToResponseDto(transaction);
+
         _context.Transactions.Remove(transaction);
         await _context.SaveChangesAsync();
         _logger.LogInformation("Transaction deleted: {TransactionId}", id);
-
-        var transactionResponseDto = ToResponseDto(transaction);
 
         return new OperationResult<TransactionResponseDto>() { Data = transactionResponseDto };
     }

@@ -11,12 +11,14 @@ public class CategoryService
     private readonly AppDbContext _context;
     private readonly ILogger<CategoryService> _logger;
     private readonly IValidator<CreateCategoryDto> _createValidator;
+    private readonly IValidator<UpdateCategoryDto> _updateValidator;
 
-    public CategoryService(AppDbContext context, ILogger<CategoryService> logger, IValidator<CreateCategoryDto> createValidator)
+    public CategoryService(AppDbContext context, ILogger<CategoryService> logger, IValidator<CreateCategoryDto> createValidator, IValidator<UpdateCategoryDto> updateValidator)
     {
         _context = context;
         _logger = logger;    
         _createValidator = createValidator;
+        _updateValidator = updateValidator;
     }
 
     private async Task<Category?> GetCategoryByIdAsync(Guid id)
@@ -40,7 +42,7 @@ public class CategoryService
 
         var categoryResponseDto = ToResponseDto(category);
 
-        _logger.LogInformation("Category Retrieved: {CategoryId}", category.Id);
+        _logger.LogInformation("Category retrieved: {CategoryId}", category.Id);
         return new OperationResult<CategoryResponseDto>() { Data = categoryResponseDto };
     }
 
@@ -103,6 +105,17 @@ public class CategoryService
                 Message = $"Category not found: {id}",
             };
 
+        }
+        
+        var validation = await _updateValidator.ValidateAsync(dto);
+        if (!validation.IsValid)
+        {
+            _logger.LogWarning("Validation failed for UpdateCategory {CategoryId}. Error: {Error}", id, validation.Errors.First().ErrorMessage);
+            return new OperationResult<CategoryResponseDto>() 
+            {
+                Status = ResultStatus.ValidationError,
+                Message = validation.Errors.First().ErrorMessage,
+            };
         }
 
         category.UserId = dto.UserId;

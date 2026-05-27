@@ -15,8 +15,11 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 builder.Services.AddScoped<AccountService>();
 builder.Services.AddScoped<IValidator<CreateAccountDto>, CreateAccountValidator>();
+builder.Services.AddScoped<IValidator<UpdateAccountDto>, UpdateAccountValidator>();
 builder.Services.AddScoped<IValidator<CreateCategoryDto>, CreateCategoryValidator>();
+builder.Services.AddScoped<IValidator<UpdateCategoryDto>, UpdateCategoryValidator>();
 builder.Services.AddScoped<IValidator<CreateTransactionDto>, CreateTransactionValidator>();
+builder.Services.AddScoped<IValidator<UpdateTransactionDto>, UpdateTransactionValidator>();
 builder.Services.AddScoped<CategoryService>();
 builder.Services.AddScoped<TransactionService>();
 builder.Services.AddOpenApi();

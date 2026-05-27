@@ -12,12 +12,14 @@ public class AccountService
     private readonly AppDbContext _context;
     private readonly ILogger<AccountService> _logger;
     private readonly IValidator<CreateAccountDto> _createValidator;
+    private readonly IValidator<UpdateAccountDto> _updateValidator;
 
-    public AccountService(AppDbContext context, ILogger<AccountService> logger, IValidator<CreateAccountDto> createValidator)
+    public AccountService(AppDbContext context, ILogger<AccountService> logger, IValidator<CreateAccountDto> createValidator, IValidator<UpdateAccountDto> updateValidator)
     {
         _context = context;
         _logger = logger;
         _createValidator = createValidator;
+        _updateValidator = updateValidator;
     }
 
     private async Task<Account?> GetAccountByIdAsync(Guid id)
@@ -101,7 +103,6 @@ public class AccountService
 
     public async Task<OperationResult<AccountResponseDto>> UpdateAccount (Guid id, UpdateAccountDto dto)
     {
-
         var account = await GetAccountByIdAsync(id);
         if (account is null)
         {
@@ -111,6 +112,17 @@ public class AccountService
                 Status = ResultStatus.NotFound,
                 Message = $"Account not found: {id}",
             };            
+        }
+
+        var validation = await _updateValidator.ValidateAsync(dto);
+        if (!validation.IsValid)
+        {
+            _logger.LogWarning("Validation failed for UpdateAccount {AccountId}. Error: {Error}", id, validation.Errors.First().ErrorMessage);
+            return new OperationResult<AccountResponseDto>()
+            {
+                Status = ResultStatus.ValidationError,
+                Message = validation.Errors.First().ErrorMessage,
+            };
         }
 
         account.UserId = dto.UserId;
@@ -124,7 +136,6 @@ public class AccountService
         var accountResponseDto = ToResponseDto(account);
 
         return new OperationResult<AccountResponseDto>() { Data = accountResponseDto };
-
     }
 
     public async Task<OperationResult<AccountResponseDto>> DeleteAccount(Guid id)

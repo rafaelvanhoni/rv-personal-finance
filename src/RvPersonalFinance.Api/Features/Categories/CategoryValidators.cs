@@ -13,3 +13,16 @@ public class CreateCategoryValidator : AbstractValidator<CreateCategoryDto>
             .MaximumLength(50).WithMessage("Name must not exceed 50 characters.");
     }
 }
+
+public class UpdateCategoryValidator : AbstractValidator<UpdateCategoryDto>
+{
+    public UpdateCategoryValidator()
+    {
+        RuleFor(x => x.UserId).NotEqual(Guid.Empty).WithMessage("UserId is required.");
+
+        RuleFor(x => x.Name)
+            .NotEmpty().WithMessage("Name is required.")
+            .MaximumLength(50).WithMessage("Name must not exceed 50 characters.");        
+    }
+    
+}
