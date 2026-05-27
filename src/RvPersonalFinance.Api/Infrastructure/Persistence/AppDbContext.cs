@@ -19,9 +19,18 @@ public class AppDbContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
 
+        modelBuilder.Entity<Account>()
+            .Property(a => a.InitialBalance)
+            .HasPrecision(18,2);
+
         modelBuilder.Entity<Transaction>()
             .Property(t => t.Type)
             .HasConversion<string>();
+
+        modelBuilder.Entity<Transaction>()
+            .Property(t => t.Amount)
+            .HasPrecision(18,2);
+
     }
 }
  
