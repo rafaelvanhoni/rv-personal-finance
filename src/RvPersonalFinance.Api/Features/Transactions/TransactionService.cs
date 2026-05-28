@@ -31,18 +31,14 @@ public class TransactionService
         var transaction = await GetTransactionByIdAsync(id);
         if (transaction is null)
         {
-            _logger.LogWarning("Transaction not found: {TransactionId}", id);
-            return new OperationResult<TransactionResponseDto>()
-            {
-                Status = ResultStatus.NotFound,
-                Message = $"Transaction not found: {id}",
-            };
+            _logger.LogWarning("Transaction not found: {TransactionId}.", id);
+            return OperationResult<TransactionResponseDto>.NotFound($"Transaction not found: {id}.");
         }
 
         var transactionResponseDto = ToResponseDto(transaction);
 
-        _logger.LogInformation("Transaction retrieved: {TransactionId}", transaction.Id);
-        return new OperationResult<TransactionResponseDto>() { Data = transactionResponseDto };
+        _logger.LogInformation("Transaction retrieved: {TransactionId}.", transaction.Id);
+        return OperationResult<TransactionResponseDto>.Success(transactionResponseDto);
 
     }
 
@@ -50,16 +46,13 @@ public class TransactionService
     {
         var transactions = await _context.Transactions.ToListAsync();
 
-        _logger.LogInformation("Transactions retrieved: {Count}", transactions.Count);
+        _logger.LogInformation("Transactions retrieved: {Count}.", transactions.Count);
 
         var transactionResponseDtos = transactions
             .Select(ToResponseDto)
             .ToList();
 
-        return new OperationResult<IEnumerable<TransactionResponseDto>>()
-        {
-            Data = transactionResponseDtos,
-        };
+        return OperationResult<IEnumerable<TransactionResponseDto>>.Success(transactionResponseDtos);
     }
 
     public async Task<OperationResult<TransactionResponseDto>> CreateTransaction(CreateTransactionDto dto)
@@ -67,12 +60,13 @@ public class TransactionService
         var validation = await _createValidator.ValidateAsync(dto);
         if (!validation.IsValid)
         {
-            _logger.LogWarning("Validation failed for CreateTransaction: {Error}", validation.Errors.First().ErrorMessage);
-            return new OperationResult<TransactionResponseDto>()
+            var errors = validation.Errors.ToOperationErrors();
+            foreach (var item in errors)
             {
-                Status = ResultStatus.ValidationError,
-                Message = validation.Errors.First().ErrorMessage,
-            };
+                _logger.LogWarning("Validation failed for CreateTransaction. ErrorMessage: {ErrorMessage}. Property: {Property}.", item.Message, item.Property);
+            }
+            
+            return OperationResult<TransactionResponseDto>.ValidationError(errors);
         }
 
         var transaction = new Transaction()
@@ -88,15 +82,11 @@ public class TransactionService
 
         await _context.Transactions.AddAsync(transaction);
         await _context.SaveChangesAsync();
-        _logger.LogInformation("Transaction created: {TransactionId}", transaction.Id);
+        _logger.LogInformation("Transaction created: {TransactionId}.", transaction.Id);
 
         var transactionResponseDto = ToResponseDto(transaction);
 
-        return new OperationResult<TransactionResponseDto>()
-        {
-            Status = ResultStatus.Created,
-            Data = transactionResponseDto
-        };
+        return OperationResult<TransactionResponseDto>.Created(transactionResponseDto);
     }
 
     public async Task<OperationResult<TransactionResponseDto>> UpdateTransaction (Guid id, UpdateTransactionDto dto)
@@ -104,23 +94,20 @@ public class TransactionService
         var transaction = await GetTransactionByIdAsync(id);
         if (transaction is null)
         {
-            _logger.LogWarning("Transaction not found: {TransactionId}", id);
-            return new OperationResult<TransactionResponseDto>()
-            {
-                Status = ResultStatus.NotFound,
-                Message = $"Transaction not found: {id}",
-            };
+            _logger.LogWarning("Transaction not found: {TransactionId}.", id);
+            return OperationResult<TransactionResponseDto>.NotFound($"Transaction not found: {id}.");
         }
 
         var validation = await _updateValidator.ValidateAsync(dto);
         if (!validation.IsValid)
         {
-            _logger.LogWarning("Validation failed for UpdateTransaction {TransactionId}. Error: {Error}", id, validation.Errors.First().ErrorMessage);
-            return new OperationResult<TransactionResponseDto>()
+            var errors = validation.Errors.ToOperationErrors();
+            foreach (var item in errors)
             {
-                Status = ResultStatus.ValidationError,
-                Message = validation.Errors.First().ErrorMessage,
-            };
+                _logger.LogWarning("Validation failed for UpdateTransaction {TransactionId}. ErrorMessage: {ErrorMessage}. Property: {Property}.", id, item.Message, item.Property);
+            }
+            
+            return OperationResult<TransactionResponseDto>.ValidationError(errors);
         }
 
         transaction.UserId = dto.UserId;
@@ -133,11 +120,11 @@ public class TransactionService
 
         _context.Transactions.Update(transaction);
         await _context.SaveChangesAsync();
-        _logger.LogInformation("Transaction updated: {TransactionId}", id);
+        _logger.LogInformation("Transaction updated: {TransactionId}.", id);
 
         var transactionResponseDto = ToResponseDto(transaction);
 
-        return new OperationResult<TransactionResponseDto>() { Data = transactionResponseDto };
+        return OperationResult<TransactionResponseDto>.Success(transactionResponseDto);
     }
 
     public async Task<OperationResult<TransactionResponseDto>> DeleteTransaction (Guid id)
@@ -145,21 +132,17 @@ public class TransactionService
         var transaction = await GetTransactionByIdAsync(id);
         if (transaction is null)
         {
-            _logger.LogWarning("Transaction not found: {TransactionId}", id);
-            return new OperationResult<TransactionResponseDto>()
-            {
-                Status = ResultStatus.NotFound,
-                Message = $"Transaction not found: {id}",
-            };
+            _logger.LogWarning("Transaction not found: {TransactionId}.", id);
+            return OperationResult<TransactionResponseDto>.NotFound($"Transaction not found: {id}.");
         }
 
         var transactionResponseDto = ToResponseDto(transaction);
 
         _context.Transactions.Remove(transaction);
         await _context.SaveChangesAsync();
-        _logger.LogInformation("Transaction deleted: {TransactionId}", id);
+        _logger.LogInformation("Transaction deleted: {TransactionId}.", id);
 
-        return new OperationResult<TransactionResponseDto>() { Data = transactionResponseDto };
+        return OperationResult<TransactionResponseDto>.Success(transactionResponseDto);
     }
 
     private static TransactionResponseDto ToResponseDto(Transaction transaction)
@@ -177,6 +160,5 @@ public class TransactionService
             CreatedAt = transaction.CreatedAt
         };
     }
-
 }
 

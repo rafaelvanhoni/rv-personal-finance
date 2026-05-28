@@ -33,38 +33,27 @@ public class AccountService
 
         if (account is null)
         {
-            _logger.LogWarning("Account not found: {AccountId}", id);
-            return new OperationResult<AccountResponseDto>()
-            {
-                Status = ResultStatus.NotFound,
-                Message = $"Account not found: {id}",
-            };
+            _logger.LogWarning("Account not found: {AccountId}.", id);
+
+            return OperationResult<AccountResponseDto>.NotFound($"Account not found: {id}.");
         }
 
         var accountResponseDto = ToResponseDto(account);
 
-        _logger.LogInformation("Account retrieved: {AccountId}", account.Id);
-        return new OperationResult<AccountResponseDto>()
-        {
-            Data = accountResponseDto
-        };
+        _logger.LogInformation("Account retrieved: {AccountId}.", account.Id);
+        return OperationResult<AccountResponseDto>.Success(accountResponseDto);
     }
 
     public async Task<OperationResult<IEnumerable<AccountResponseDto>>> GetAllAccounts() 
     {
         var accounts = await _context.Accounts.ToListAsync();
-        _logger.LogInformation(
-            "Accounts retrieved: {Count}",
-            accounts.Count);
+        _logger.LogInformation("Accounts retrieved: {Count}.", accounts.Count);
 
         var accountResponseDtos = accounts
             .Select(ToResponseDto)
             .ToList();
 
-        return new OperationResult<IEnumerable<AccountResponseDto>>()
-        {
-            Data = accountResponseDtos
-        };
+        return OperationResult<IEnumerable<AccountResponseDto>>.Success(accountResponseDtos);
     }
 
     public async Task<OperationResult<AccountResponseDto>> CreateAccount (CreateAccountDto dto)
@@ -73,12 +62,13 @@ public class AccountService
         var validation = await _createValidator.ValidateAsync(dto);
         if (!validation.IsValid)
         {
-            _logger.LogWarning("Validation failed for CreateAccount: {Error}", validation.Errors.First().ErrorMessage);
-            return new OperationResult<AccountResponseDto>()
+            var errors = validation.Errors.ToOperationErrors();
+
+            foreach (var item in errors)
             {
-                Status = ResultStatus.ValidationError,
-                Message = validation.Errors.First().ErrorMessage,
-            };
+                _logger.LogWarning("Validation failed for CreateAccount. ErrorMessage: {ErrorMessage}. Property: {Property}.", item.Message, item.Property);
+            }
+            return OperationResult<AccountResponseDto>.ValidationError(errors);
         }        
 
         var account = new Account
@@ -90,15 +80,11 @@ public class AccountService
 
         await _context.Accounts.AddAsync(account);
         await _context.SaveChangesAsync();
-        _logger.LogInformation("Account created: {AccountId}", account.Id);
+        _logger.LogInformation("Account created: {AccountId}.", account.Id);
 
         var accountResponseDto = ToResponseDto(account);
 
-        return new OperationResult<AccountResponseDto>()
-        {
-          Status = ResultStatus.Created,
-          Data = accountResponseDto  
-        };
+        return OperationResult<AccountResponseDto>.Created(accountResponseDto);
     }
 
     public async Task<OperationResult<AccountResponseDto>> UpdateAccount (Guid id, UpdateAccountDto dto)
@@ -106,23 +92,19 @@ public class AccountService
         var account = await GetAccountByIdAsync(id);
         if (account is null)
         {
-            _logger.LogWarning("Account not found: {AccountId}", id);
-            return new OperationResult<AccountResponseDto>()
-            {
-                Status = ResultStatus.NotFound,
-                Message = $"Account not found: {id}",
-            };            
+            _logger.LogWarning("Account not found: {AccountId}.", id);
+            return OperationResult<AccountResponseDto>.NotFound($"Account not found: {id}.");
         }
 
         var validation = await _updateValidator.ValidateAsync(dto);
         if (!validation.IsValid)
         {
-            _logger.LogWarning("Validation failed for UpdateAccount {AccountId}. Error: {Error}", id, validation.Errors.First().ErrorMessage);
-            return new OperationResult<AccountResponseDto>()
+            var errors = validation.Errors.ToOperationErrors();
+            foreach (var item in errors)
             {
-                Status = ResultStatus.ValidationError,
-                Message = validation.Errors.First().ErrorMessage,
-            };
+                _logger.LogWarning("Validation failed for UpdateAccount {AccountId}. ErrorMessage: {ErrorMessage}. Property: {Property}.", id, item.Message, item.Property);                
+            }
+            return OperationResult<AccountResponseDto>.ValidationError(errors);
         }
 
         account.UserId = dto.UserId;
@@ -131,11 +113,11 @@ public class AccountService
 
         _context.Accounts.Update(account);
         await _context.SaveChangesAsync();
-        _logger.LogInformation("Account updated: {AccountId}", account.Id); 
+        _logger.LogInformation("Account updated: {AccountId}.", account.Id); 
 
         var accountResponseDto = ToResponseDto(account);
 
-        return new OperationResult<AccountResponseDto>() { Data = accountResponseDto };
+        return OperationResult<AccountResponseDto>.Success(accountResponseDto);
     }
 
     public async Task<OperationResult<AccountResponseDto>> DeleteAccount(Guid id)
@@ -143,21 +125,17 @@ public class AccountService
         var account = await GetAccountByIdAsync(id);
         if (account is null)
         {
-            _logger.LogWarning("Account not found: {AccountId}", id);
-            return new OperationResult<AccountResponseDto>()
-            {
-                Status = ResultStatus.NotFound,
-                Message = $"Account not found: {id}",
-            };            
+            _logger.LogWarning("Account not found: {AccountId}.", id);
+            return OperationResult<AccountResponseDto>.NotFound($"Account not found: {id}.");
         }
 
         var accountResponseDto = ToResponseDto(account);
 
         _context.Accounts.Remove(account);
         await _context.SaveChangesAsync();
-        _logger.LogInformation("Account deleted: {AccountId}", id);
+        _logger.LogInformation("Account deleted: {AccountId}.", id);
 
-        return new OperationResult<AccountResponseDto>() { Data = accountResponseDto };   
+        return OperationResult<AccountResponseDto>.Success(accountResponseDto);
     }
 
     private static AccountResponseDto ToResponseDto(Account account)
@@ -169,7 +147,6 @@ public class AccountService
             Name = account.Name,
             InitialBalance = account.InitialBalance,
             CreatedAt = account.CreatedAt
-        };        
-
+        };
     }
 }

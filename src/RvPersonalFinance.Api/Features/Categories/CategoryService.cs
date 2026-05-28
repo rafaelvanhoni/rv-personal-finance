@@ -32,33 +32,26 @@ public class CategoryService
 
         if (category is null)
         {
-            _logger.LogWarning("Category not found: {CategoryId}", id);
-            return new OperationResult<CategoryResponseDto>
-            {
-                Status = ResultStatus.NotFound,
-                Message = $"Category not found: {id}",
-            };
+            _logger.LogWarning("Category not found: {CategoryId}.", id);
+            return OperationResult<CategoryResponseDto>.NotFound($"Category not found: {id}.");
         }
 
         var categoryResponseDto = ToResponseDto(category);
 
-        _logger.LogInformation("Category retrieved: {CategoryId}", category.Id);
-        return new OperationResult<CategoryResponseDto>() { Data = categoryResponseDto };
+        _logger.LogInformation("Category retrieved: {CategoryId}.", category.Id);
+        return OperationResult<CategoryResponseDto>.Success(categoryResponseDto);
     }
 
     public async Task<OperationResult<IEnumerable<CategoryResponseDto>>> GetAllCategories()
     {
         var categories = await _context.Categories.ToListAsync();
-        _logger.LogInformation("Categories retrieved: {Count}", categories.Count);
+        _logger.LogInformation("Categories retrieved: {Count}.", categories.Count);
 
         var categoryResponseDtos = categories
             .Select(ToResponseDto)
             .ToList();
 
-        return new OperationResult<IEnumerable<CategoryResponseDto>>() 
-        { 
-            Data = categoryResponseDtos 
-        };
+        return OperationResult<IEnumerable<CategoryResponseDto>>.Success(categoryResponseDtos);
     }
 
     public async Task<OperationResult<CategoryResponseDto>> CreateCategory(CreateCategoryDto dto)
@@ -66,12 +59,13 @@ public class CategoryService
         var validation = await _createValidator.ValidateAsync(dto);
         if (!validation.IsValid)
         {
-            _logger.LogWarning("Validation failed for CreateCategory: {Error}", validation.Errors.First().ErrorMessage);
-            return new OperationResult<CategoryResponseDto>()
+            var errors = validation.Errors.ToOperationErrors();
+            foreach (var item in errors)
             {
-                Status = ResultStatus.ValidationError,
-                Message = validation.Errors.First().ErrorMessage,
-            };
+                _logger.LogWarning("Validation failed for CreateCategory. ErrorMessage: {ErrorMessage}. Property: {Property}.", item.Message, item.Property);
+            }
+            
+            return OperationResult<CategoryResponseDto>.ValidationError(errors);
         }
 
         var category = new Category()
@@ -82,15 +76,11 @@ public class CategoryService
 
         await _context.Categories.AddAsync(category);
         await _context.SaveChangesAsync();
-        _logger.LogInformation("Category created: {CategoryId}", category.Id);
+        _logger.LogInformation("Category created: {CategoryId}.", category.Id);
 
         var categoryResponseDto = ToResponseDto(category);
 
-        return new OperationResult<CategoryResponseDto>()
-        {
-            Status = ResultStatus.Created,
-            Data = categoryResponseDto
-        };
+        return OperationResult<CategoryResponseDto>.Created(categoryResponseDto);
     }
 
     public async Task<OperationResult<CategoryResponseDto>> UpdateCategory(Guid id, UpdateCategoryDto dto)
@@ -99,23 +89,18 @@ public class CategoryService
         if (category is null) 
         {
             _logger.LogWarning("Category not found: {CategoryId}", id);
-            return new OperationResult<CategoryResponseDto>
-            {
-                Status = ResultStatus.NotFound,
-                Message = $"Category not found: {id}",
-            };
-
+            return OperationResult<CategoryResponseDto>.NotFound($"Category not found: {id}.");
         }
-        
+
         var validation = await _updateValidator.ValidateAsync(dto);
         if (!validation.IsValid)
         {
-            _logger.LogWarning("Validation failed for UpdateCategory {CategoryId}. Error: {Error}", id, validation.Errors.First().ErrorMessage);
-            return new OperationResult<CategoryResponseDto>() 
+            var errors = validation.Errors.ToOperationErrors();
+            foreach (var item in errors)
             {
-                Status = ResultStatus.ValidationError,
-                Message = validation.Errors.First().ErrorMessage,
-            };
+                _logger.LogWarning("Validation failed for UpdateCategory {CategoryId}. ErrorMessage: {ErrorMessage}. Property: {Property}.", id, item.Message, item.Property);                
+            }
+            return OperationResult<CategoryResponseDto>.ValidationError(errors);
         }
 
         category.UserId = dto.UserId;
@@ -127,7 +112,7 @@ public class CategoryService
 
         var categoryResponseDto = ToResponseDto(category);
 
-        return new OperationResult<CategoryResponseDto>() { Data = categoryResponseDto };
+        return OperationResult<CategoryResponseDto>.Success(categoryResponseDto);
     }
 
     public async Task<OperationResult<CategoryResponseDto>> DeleteCategory(Guid id)
@@ -135,13 +120,8 @@ public class CategoryService
         var category = await GetCategoryByIdAsync(id);
         if (category is null) 
         {
-            _logger.LogWarning("Category not found: {CategoryId}", id);
-            return new OperationResult<CategoryResponseDto>
-            {
-                Status = ResultStatus.NotFound,
-                Message = $"Category not found: {id}",
-            };
-
+            _logger.LogWarning("Category not found: {CategoryId}.", id);
+            return OperationResult<CategoryResponseDto>.NotFound($"Category not found: {id}");
         }
 
         var categoryResponseDto = ToResponseDto(category);
@@ -150,7 +130,7 @@ public class CategoryService
         await _context.SaveChangesAsync();
         _logger.LogInformation("Category deleted {CategoryId}", id);
 
-        return new OperationResult<CategoryResponseDto>() { Data = categoryResponseDto };
+        return OperationResult<CategoryResponseDto>.Success(categoryResponseDto);
     }
 
     private static CategoryResponseDto ToResponseDto(Category category)

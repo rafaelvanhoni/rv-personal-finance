@@ -1,3 +1,5 @@
+using FluentValidation.Results;
+
 namespace RvPersonalFinance.Api.Shared;
 
 public static class OperationResultsExtensions
@@ -13,5 +15,14 @@ public static class OperationResultsExtensions
             ResultStatus.Created => Results.Created((string?)null, result),
             _ => Results.StatusCode(500),
         };
+    }
+
+    public static List<OperationError> ToOperationErrors (this IEnumerable<ValidationFailure> failures)
+    {
+        return failures.Select(e => new OperationError
+        {
+            Property = e.PropertyName,
+            Message = e.ErrorMessage
+        }).ToList();
     }
 }
