@@ -88,7 +88,7 @@ public class CategoryService
         var category = await GetCategoryByIdAsync(id);
         if (category is null) 
         {
-            _logger.LogWarning("Category not found: {CategoryId}", id);
+            _logger.LogWarning("Category not found: {CategoryId}.", id);
             return OperationResult<CategoryResponseDto>.NotFound($"Category not found: {id}.");
         }
 
@@ -108,7 +108,7 @@ public class CategoryService
 
         _context.Categories.Update(category);
         await _context.SaveChangesAsync();
-        _logger.LogInformation("Category updated: {CategoryId}", category.Id);
+        _logger.LogInformation("Category updated: {CategoryId}.", category.Id);
 
         var categoryResponseDto = ToResponseDto(category);
 
@@ -121,14 +121,14 @@ public class CategoryService
         if (category is null) 
         {
             _logger.LogWarning("Category not found: {CategoryId}.", id);
-            return OperationResult<CategoryResponseDto>.NotFound($"Category not found: {id}");
+            return OperationResult<CategoryResponseDto>.NotFound($"Category not found: {id}.");
         }
 
         var categoryResponseDto = ToResponseDto(category);
 
         _context.Categories.Remove(category);
         await _context.SaveChangesAsync();
-        _logger.LogInformation("Category deleted {CategoryId}", id);
+        _logger.LogInformation("Category deleted {CategoryId}.", id);
 
         return OperationResult<CategoryResponseDto>.Success(categoryResponseDto);
     }
