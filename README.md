@@ -1,6 +1,6 @@
 # 💰 RV Personal Finance
 
-> 🚧 **Status:** In progress — Phase 1 (Project Foundation)
+> 🚧 **Status:** In progress — Phase 3 (Professional Architecture). Full CRUD with validation and standardized responses; JWT auth and automated tests are next.
 
 A personal finance REST API built with **ASP.NET Core Minimal APIs**, **Entity Framework Core** and **PostgreSQL**.
 
@@ -46,7 +46,9 @@ This project is intentionally built **without shortcuts** — each concept is un
 
 ## 🚀 Features (MVP)
 
-- [ ] CRUD: Accounts, Categories, Transactions
+- [x] CRUD: Accounts, Categories, Transactions
+- [x] Request validation with FluentValidation (multiple errors per response, field-level details)
+- [x] Standardized API responses via `OperationResult<T>`
 - [ ] Balance calculation derived from transactions (Income − Expense)
 - [ ] Financial history queries
 - [ ] Dashboard: total income, total expenses, balance, spending by category
@@ -81,14 +83,11 @@ RvPersonalFinance/
 │       │   ├── Accounts/      # AccountDtos, AccountService, AccountEndpoints
 │       │   ├── Categories/    # CategoryDtos, CategoryService, CategoryEndpoints
 │       │   └── Transactions/  # TransactionDtos, TransactionService, TransactionEndpoints
-│       ├── Shared/            # OperationResult<T> and shared types
-│       ├── Extensions/        # Endpoint registration and DI setup
+│       ├── Shared/            # OperationResult<T>, OperationError and HTTP result adapters
 │       └── Program.cs         # Application entry point
 │
 ├── tests/
-│   └── RvPersonalFinance.Tests/
-│       ├── Unit/              # Service unit tests
-│       └── Integration/       # API integration tests
+│   └── RvPersonalFinance.Tests/   # xUnit project (unit + integration tests — in progress)
 │
 ├── docker-compose.yml
 ├── .env                       # Local environment variables (not committed)
@@ -180,10 +179,10 @@ dotnet ef database update --project src/RvPersonalFinance.Api
 dotnet run --project src/RvPersonalFinance.Api
 ```
 
-7. Open Swagger UI:
+7. Open the Scalar UI (interactive API reference):
 
 ```
-http://localhost:5000/swagger
+http://localhost:5099/scalar
 ```
 
 ---
@@ -193,21 +192,31 @@ http://localhost:5000/swagger
 - [x] Solution and project structure
 - [x] Domain entities (`User`, `Account`, `Category`, `Transaction`)
 - [x] Git repository with organized `.gitignore`
-- [ ] Docker + PostgreSQL setup
-- [ ] Entity Framework Core configuration
-- [ ] First database migration
-- [ ] Swagger configured
-- [ ] Health check endpoint
-- [ ] DTOs and service layer
-- [ ] CRUD for all entities
-- [ ] Balance calculation
+- [x] Docker + PostgreSQL setup
+- [x] Entity Framework Core configuration (migrations, enum-as-string, monetary precision)
+- [x] Scalar UI (modern OpenAPI reference for .NET 9)
+- [x] Basic health check endpoint
+- [x] DTOs and service layer
+- [x] CRUD for all entities
+- [x] FluentValidation with structured, field-level errors
+- [ ] EF Core relationships (foreign keys + navigation properties)
+- [ ] Global exception handling middleware + Problem Details (RFC 7807)
+- [ ] Real health checks (API + PostgreSQL)
+- [ ] Balance calculation and dashboard endpoints
 - [ ] JWT authentication
 - [ ] User ownership enforcement
 - [ ] Unit tests
 - [ ] Integration tests
-- [ ] Angular frontend
-- [ ] Full Docker Compose (API + PostgreSQL + Frontend)
-- [ ] Production deploy
+- [ ] API Dockerfile + CI (GitHub Actions)
+- [ ] Production deploy (home lab)
+
+### 💡 Future ideas (post-MVP)
+
+- Angular frontend (dashboard, auth flow, transaction management)
+- Full Docker Compose (API + PostgreSQL + Frontend)
+- Credit card domain, bank statement import (CSV/OFX)
+- AI-assisted transaction classification (Python/ML)
+- Telegram bot for quick transaction entry
 
 ---
 
