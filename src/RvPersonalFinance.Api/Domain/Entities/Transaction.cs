@@ -13,4 +13,8 @@ public class Transaction
     public TransactionType Type { get; set; }
     public DateOnly TransactionDate { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+    public User User { get; set; } = null!;
+    public Account Account { get; set; } = null!;
+    public Category Category { get; set; } = null!;
 }

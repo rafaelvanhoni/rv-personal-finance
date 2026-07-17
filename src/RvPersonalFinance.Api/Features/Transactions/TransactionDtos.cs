@@ -15,7 +15,6 @@ public class CreateTransactionDto
 
 public class UpdateTransactionDto
 {
-    public Guid UserId { get; set; }
     public Guid AccountId { get; set; }
     public Guid CategoryId { get; set; }
     public string Description { get; set; } = string.Empty;

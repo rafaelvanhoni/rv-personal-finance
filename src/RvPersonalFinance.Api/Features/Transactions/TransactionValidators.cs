@@ -31,7 +31,6 @@ public class UpdateTransactionValidator : AbstractValidator<UpdateTransactionDto
 {
     public UpdateTransactionValidator()
     {
-        RuleFor(x => x.UserId).NotEqual(Guid.Empty).WithMessage("UserId is required.");
         RuleFor(x => x.AccountId).NotEqual(Guid.Empty).WithMessage("AccountId is required.");
         RuleFor(x => x.CategoryId).NotEqual(Guid.Empty).WithMessage("CategoryId is required.");
 

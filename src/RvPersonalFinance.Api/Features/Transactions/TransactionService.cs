@@ -65,9 +65,13 @@ public class TransactionService
             {
                 _logger.LogWarning("Validation failed for CreateTransaction. ErrorMessage: {ErrorMessage}. Property: {Property}.", item.Message, item.Property);
             }
-            
+
             return OperationResult<TransactionResponseDto>.ValidationError(errors);
         }
+
+        var referenceErrors = await CheckReferencesAsync(dto.UserId, dto.AccountId, dto.CategoryId);
+        if (referenceErrors.Count > 0)
+            return OperationResult<TransactionResponseDto>.ValidationError(referenceErrors);
 
         var transaction = new Transaction()
         {
@@ -110,7 +114,10 @@ public class TransactionService
             return OperationResult<TransactionResponseDto>.ValidationError(errors);
         }
 
-        transaction.UserId = dto.UserId;
+        var referenceErrors = await CheckReferencesAsync(transaction.UserId, dto.AccountId, dto.CategoryId);
+        if (referenceErrors.Count > 0)
+            return OperationResult<TransactionResponseDto>.ValidationError(referenceErrors);
+
         transaction.AccountId = dto.AccountId;
         transaction.CategoryId = dto.CategoryId;
         transaction.Description = dto.Description.Trim();
@@ -159,6 +166,46 @@ public class TransactionService
             TransactionDate = transaction.TransactionDate,
             CreatedAt = transaction.CreatedAt
         };
+    }
+
+    private async Task<List<OperationError>> CheckReferencesAsync(Guid userId, Guid accountId, Guid categoryId)
+    {
+        var referenceErrors = new List<OperationError>();
+
+        var userExists = await _context.Users.AnyAsync(u => u.Id == userId);
+        if (!userExists)
+        {
+            referenceErrors.Add(new OperationError
+            {
+                Property = nameof(Transaction.UserId),
+                Message = $"User not found: {userId}."
+            });
+            _logger.LogWarning("User not found: {UserId}.", userId);
+        }
+
+        var accountExists = await _context.Accounts.AnyAsync(a => a.Id == accountId && a.UserId == userId);
+        if (!accountExists)
+        {
+            referenceErrors.Add(new OperationError
+            {
+                Property = nameof(Transaction.AccountId),
+                Message = $"Account not found: {accountId}."
+            });
+            _logger.LogWarning("Account not found: {AccountId}.", accountId);
+        }
+
+        var categoryExists = await _context.Categories.AnyAsync(c => c.Id == categoryId && c.UserId == userId);
+        if (!categoryExists)
+        {
+            referenceErrors.Add(new OperationError
+            {
+                Property = nameof(Transaction.CategoryId),
+                Message = $"Category not found: {categoryId}."
+            });
+            _logger.LogWarning("Category not found: {CategoryId}.", categoryId);
+        }
+
+        return referenceErrors;
     }
 }
 
