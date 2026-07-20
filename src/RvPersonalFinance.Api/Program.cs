@@ -6,6 +6,7 @@ using RvPersonalFinance.Api.Features.Accounts;
 using RvPersonalFinance.Api.Features.Categories;
 using RvPersonalFinance.Api.Features.Transactions;
 using FluentValidation;
+using RvPersonalFinance.Api.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -23,9 +24,12 @@ builder.Services.AddScoped<IValidator<UpdateTransactionDto>, UpdateTransactionVa
 builder.Services.AddScoped<CategoryService>();
 builder.Services.AddScoped<TransactionService>();
 builder.Services.AddOpenApi();
+builder.Services.AddProblemDetails();
 builder.Services.ConfigureHttpJsonOptions(options => options.SerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 
 var app = builder.Build();
+
+app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
