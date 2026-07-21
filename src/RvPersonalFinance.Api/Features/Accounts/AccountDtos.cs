@@ -24,3 +24,11 @@ public class AccountResponseDto
     public DateTime CreatedAt { get; init; }
     
 }
+
+public class AccountBalanceDto
+{
+    public decimal InitialBalance { get; init; }
+    public decimal TotalIncome { get; init; }
+    public decimal TotalExpense { get; init; }
+    public decimal CurrentBalance { get; init; }
+}

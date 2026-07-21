@@ -1,8 +1,10 @@
+using System.Threading.Tasks;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using RvPersonalFinance.Api.Domain.Entities;
 using RvPersonalFinance.Api.Infrastructure.Persistence;
 using RvPersonalFinance.Api.Shared;
+using RvPersonalFinance.Api.Domain.Enums;
 
 namespace RvPersonalFinance.Api.Features.Accounts;
 
@@ -136,6 +138,36 @@ public class AccountService
         _logger.LogInformation("Account deleted: {AccountId}.", id);
 
         return OperationResult<AccountResponseDto>.Success(accountResponseDto);
+    }
+
+    public async Task<OperationResult<AccountBalanceDto>> CalculateBalance(Guid id)
+    {
+        var account = await GetAccountByIdAsync(id);
+
+        if (account is null)
+        {
+            _logger.LogWarning("Account not found: {AccountId}.", id);
+            return OperationResult<AccountBalanceDto>.NotFound($"Account not found: {id}.");
+        }
+
+        var initialBalance = account.InitialBalance;
+        var totalIncome = await _context.Transactions
+                            .Where(t => t.AccountId == account.Id && t.UserId == account.UserId && t.Type == TransactionType.Income)
+                            .SumAsync(t => t.Amount);
+        var totalExpense = await _context.Transactions
+                            .Where(t => t.AccountId == account.Id && t.UserId == account.UserId && t.Type == TransactionType.Expense)
+                            .SumAsync(t => t.Amount);
+        var currentBalance = initialBalance + totalIncome - totalExpense;
+
+        var balanceDto = new AccountBalanceDto()
+        {
+            InitialBalance = initialBalance,
+            TotalIncome = totalIncome,
+            TotalExpense = totalExpense,
+            CurrentBalance = currentBalance
+        };        
+
+        return OperationResult<AccountBalanceDto>.Success(balanceDto);
     }
 
     private static AccountResponseDto ToResponseDto(Account account)

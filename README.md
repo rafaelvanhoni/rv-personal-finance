@@ -1,6 +1,6 @@
 # 💰 RV Personal Finance
 
-> 🚧 **Status:** In progress — Phase 3 (Professional Architecture). Full CRUD with validation and standardized responses; JWT auth and automated tests are next.
+> 🚧 **Status:** In progress — Phase 3 (Professional Architecture) complete: full CRUD with field-level validation, standardized responses, EF Core relationships with ownership checks, global exception handling (RFC 7807) and real health checks. Balance/dashboard endpoints, JWT auth and automated tests are next.
 
 A personal finance REST API built with **ASP.NET Core Minimal APIs**, **Entity Framework Core** and **PostgreSQL**.
 
@@ -199,9 +199,10 @@ http://localhost:5099/scalar
 - [x] DTOs and service layer
 - [x] CRUD for all entities
 - [x] FluentValidation with structured, field-level errors
-- [ ] EF Core relationships (foreign keys + navigation properties)
-- [ ] Global exception handling middleware + Problem Details (RFC 7807)
-- [ ] Real health checks (API + PostgreSQL)
+- [x] EF Core relationships (foreign keys + navigation properties, `DeleteBehavior.Restrict`)
+- [x] Reference validation with ownership (transaction references must exist and belong to the user)
+- [x] Global exception handling middleware + Problem Details (RFC 7807)
+- [x] Real health checks (API + PostgreSQL readiness probe)
 - [ ] Balance calculation and dashboard endpoints
 - [ ] JWT authentication
 - [ ] User ownership enforcement

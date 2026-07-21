@@ -18,6 +18,12 @@ public static class AccountEndpoints
            return result.ToHttpResult(); 
         });
 
+        app.MapGet("/accounts/{id}/balance", async (Guid id, AccountService service) =>
+        {
+            var result = await service.CalculateBalance(id);
+            return result.ToHttpResult();
+        });
+
         app.MapPost("/accounts", async (CreateAccountDto dto, AccountService service) =>
         {
             var result = await service.CreateAccount(dto);
