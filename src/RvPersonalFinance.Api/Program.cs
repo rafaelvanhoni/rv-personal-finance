@@ -9,11 +9,12 @@ using FluentValidation;
 using RvPersonalFinance.Api.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")!;
 
 // Add services to the container.
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddDbContext<AppDbContext>(options => 
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseNpgsql(connectionString));
 builder.Services.AddScoped<AccountService>();
 builder.Services.AddScoped<IValidator<CreateAccountDto>, CreateAccountValidator>();
 builder.Services.AddScoped<IValidator<UpdateAccountDto>, UpdateAccountValidator>();
@@ -25,6 +26,7 @@ builder.Services.AddScoped<CategoryService>();
 builder.Services.AddScoped<TransactionService>();
 builder.Services.AddOpenApi();
 builder.Services.AddProblemDetails();
+builder.Services.AddHealthChecks().AddNpgSql(connectionString);
 builder.Services.ConfigureHttpJsonOptions(options => options.SerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 
 var app = builder.Build();
@@ -40,10 +42,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-app.MapGet("/", () => new
-{
-    status = "ok"
-}).WithName("HealthCheck");
+app.MapHealthChecks("/health");
 
 app.MapAccountEndpoints();
 app.MapCategoryEndpoints();
