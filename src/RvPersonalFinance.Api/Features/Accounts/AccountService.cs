@@ -1,4 +1,3 @@
-using System.Threading.Tasks;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using RvPersonalFinance.Api.Domain.Entities;
