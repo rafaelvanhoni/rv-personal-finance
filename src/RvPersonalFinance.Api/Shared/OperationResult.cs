@@ -48,4 +48,16 @@ public class OperationResult<T>
             Data = data
         };
     }
+
+    public static OperationResult<T> Conflict(string message)
+    {
+        return new OperationResult<T>
+        {
+            Status = ResultStatus.Conflict,
+            Errors = [new OperationError
+            {
+                Message = message,
+            }]
+        };
+    }    
 }

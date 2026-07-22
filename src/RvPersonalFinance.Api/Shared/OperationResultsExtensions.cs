@@ -13,6 +13,7 @@ public static class OperationResultsExtensions
             ResultStatus.ValidationError => Results.BadRequest(result),
             ResultStatus.BusinessError => Results.UnprocessableEntity(result),
             ResultStatus.Created => Results.Created((string?)null, result),
+            ResultStatus.Conflict => Results.Conflict(result),
             _ => Results.StatusCode(500),
         };
     }

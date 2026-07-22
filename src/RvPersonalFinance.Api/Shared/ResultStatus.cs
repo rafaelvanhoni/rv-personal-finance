@@ -6,5 +6,6 @@ public enum ResultStatus
     NotFound,
     ValidationError,
     BusinessError,
-    Created
+    Created,
+    Conflict
 }

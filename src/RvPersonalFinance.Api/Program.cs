@@ -8,6 +8,7 @@ using RvPersonalFinance.Api.Features.Transactions;
 using FluentValidation;
 using RvPersonalFinance.Api.Middleware;
 using RvPersonalFinance.Api.Features.Dashboard;
+using RvPersonalFinance.Api.Features.Auth;
 
 var builder = WebApplication.CreateBuilder(args);
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")!;
@@ -26,6 +27,7 @@ builder.Services.AddScoped<IValidator<UpdateTransactionDto>, UpdateTransactionVa
 builder.Services.AddScoped<CategoryService>();
 builder.Services.AddScoped<TransactionService>();
 builder.Services.AddScoped<DashboardService>();
+builder.Services.AddScoped<AuthService>();
 builder.Services.AddOpenApi();
 builder.Services.AddProblemDetails();
 builder.Services.AddHealthChecks().AddNpgSql(connectionString);
@@ -46,6 +48,7 @@ app.UseHttpsRedirection();
 
 app.MapHealthChecks("/health");
 
+app.MapAuthEndpoints();
 app.MapAccountEndpoints();
 app.MapCategoryEndpoints();
 app.MapTransactionEndpoints();
