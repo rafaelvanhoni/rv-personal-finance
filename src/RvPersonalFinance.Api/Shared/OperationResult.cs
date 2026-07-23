@@ -59,5 +59,17 @@ public class OperationResult<T>
                 Message = message,
             }]
         };
-    }    
+    }   
+
+    public static OperationResult<T> Unauthorized(string message)
+    {
+        return new OperationResult<T>
+        {
+            Status = ResultStatus.Unauthorized,
+            Errors = [new OperationError
+            {
+                Message = message,
+            }]
+        };
+    } 
 }

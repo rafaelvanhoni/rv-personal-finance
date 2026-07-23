@@ -12,9 +12,10 @@ public static class AuthEndpoints
             return result.ToHttpResult();
         });
 
-        // app.MapPost("/auth/login", async () =>
-        // {
-            
-        // });
+        app.MapPost("/auth/login", async (LoginDto dto, AuthService service) =>
+        {
+            var result = await service.Login(dto);
+            return result.ToHttpResult();
+        });
     }
 }

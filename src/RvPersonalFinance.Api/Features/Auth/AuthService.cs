@@ -8,11 +8,13 @@ namespace RvPersonalFinance.Api.Features.Auth;
 public class AuthService
 {
     private readonly AppDbContext _context;
+    private readonly TokenService _tokenService;
     private readonly ILogger<AuthService> _logger;
 
-    public AuthService(AppDbContext context, ILogger<AuthService> logger)
+    public AuthService(AppDbContext context, TokenService tokenService, ILogger<AuthService> logger)
     {
         _context = context;
+        _tokenService = tokenService;
         _logger = logger;
     }    
 
@@ -39,6 +41,24 @@ public class AuthService
         var userResponseDto = ToResponseDto(user);
 
         return OperationResult<UserResponseDto>.Created(userResponseDto);
+    }
+
+    public async Task<OperationResult<LoginResponseDto>> Login(LoginDto dto)
+    {
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == dto.Email.Trim());
+
+        if (user is null || !BCrypt.Net.BCrypt.Verify(dto.Password, user.PasswordHash))
+        {
+            _logger.LogWarning("Failed login attempt for email: {Email}.", dto.Email);
+            return OperationResult<LoginResponseDto>.Unauthorized("Invalid email or password.");
+        }
+
+        var token = _tokenService.GenerateToken(user);
+        _logger.LogInformation("User logged in: {UserId}.", user.Id);
+
+        return OperationResult<LoginResponseDto>.Success(new LoginResponseDto { 
+            Token = token,
+        });
     }
 
     private static UserResponseDto ToResponseDto(User user)

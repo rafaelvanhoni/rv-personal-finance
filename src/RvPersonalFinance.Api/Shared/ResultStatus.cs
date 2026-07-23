@@ -7,5 +7,6 @@ public enum ResultStatus
     ValidationError,
     BusinessError,
     Created,
-    Conflict
+    Conflict,
+    Unauthorized
 }

@@ -14,6 +14,7 @@ public static class OperationResultsExtensions
             ResultStatus.BusinessError => Results.UnprocessableEntity(result),
             ResultStatus.Created => Results.Created((string?)null, result),
             ResultStatus.Conflict => Results.Conflict(result),
+            ResultStatus.Unauthorized => Results.Json(result, statusCode: 401),
             _ => Results.StatusCode(500),
         };
     }

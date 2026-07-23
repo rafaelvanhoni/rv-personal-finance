@@ -14,3 +14,14 @@ public class UserResponseDto
     public string Email { get; init; } = string.Empty;
     public DateTime CreatedAt { get; init; }
 }
+
+public class LoginDto
+{
+    public string Email { get; set; } = string.Empty;
+    public string Password { get; set; } = string.Empty;
+}
+
+public  class LoginResponseDto
+{
+    public string Token { get; init; } = string.Empty;
+}

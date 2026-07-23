@@ -28,6 +28,7 @@ builder.Services.AddScoped<CategoryService>();
 builder.Services.AddScoped<TransactionService>();
 builder.Services.AddScoped<DashboardService>();
 builder.Services.AddScoped<AuthService>();
+builder.Services.AddScoped<TokenService>();
 builder.Services.AddOpenApi();
 builder.Services.AddProblemDetails();
 builder.Services.AddHealthChecks().AddNpgSql(connectionString);
