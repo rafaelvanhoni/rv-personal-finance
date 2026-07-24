@@ -21,32 +21,32 @@ public class TransactionService
         _updateValidator = updateValidator;
     }   
 
-    private async Task<Transaction?> GetTransactionByIdAsync(Guid id)
+    private async Task<Transaction?> GetTransactionByIdAsync(Guid id, Guid userId)
     {
-        var transaction = await _context.Transactions.FirstOrDefaultAsync(transaction => transaction.Id == id);
+        var transaction = await _context.Transactions.FirstOrDefaultAsync(t => t.Id == id && t.UserId == userId);
         return transaction;        
     }
-    public async Task<OperationResult<TransactionResponseDto>> GetTransactionById(Guid id)
+    public async Task<OperationResult<TransactionResponseDto>> GetTransactionById(Guid id, Guid userId)
     {
-        var transaction = await GetTransactionByIdAsync(id);
+        var transaction = await GetTransactionByIdAsync(id, userId);
         if (transaction is null)
         {
-            _logger.LogWarning("Transaction not found: {TransactionId}.", id);
+            _logger.LogWarning("Transaction not found: {TransactionId} for user {UserId}.", id, userId);
             return OperationResult<TransactionResponseDto>.NotFound($"Transaction not found: {id}.");
         }
 
         var transactionResponseDto = ToResponseDto(transaction);
 
-        _logger.LogInformation("Transaction retrieved: {TransactionId}.", transaction.Id);
+        _logger.LogInformation("Transaction retrieved: {TransactionId} for user {UserId}.", transaction.Id, transaction.UserId);
         return OperationResult<TransactionResponseDto>.Success(transactionResponseDto);
 
     }
 
-    public async Task<OperationResult<IEnumerable<TransactionResponseDto>>> GetAllTransactions()
+    public async Task<OperationResult<IEnumerable<TransactionResponseDto>>> GetAllTransactions(Guid userId)
     {
-        var transactions = await _context.Transactions.ToListAsync();
+        var transactions = await _context.Transactions.Where(t => t.UserId == userId).ToListAsync();
 
-        _logger.LogInformation("Transactions retrieved: {Count}.", transactions.Count);
+        _logger.LogInformation("Transactions retrieved: {Count} for user {UserId}.", transactions.Count, userId);
 
         var transactionResponseDtos = transactions
             .Select(ToResponseDto)
@@ -55,7 +55,7 @@ public class TransactionService
         return OperationResult<IEnumerable<TransactionResponseDto>>.Success(transactionResponseDtos);
     }
 
-    public async Task<OperationResult<TransactionResponseDto>> CreateTransaction(CreateTransactionDto dto)
+    public async Task<OperationResult<TransactionResponseDto>> CreateTransaction(CreateTransactionDto dto, Guid userId)
     {
         var validation = await _createValidator.ValidateAsync(dto);
         if (!validation.IsValid)
@@ -69,13 +69,13 @@ public class TransactionService
             return OperationResult<TransactionResponseDto>.ValidationError(errors);
         }
 
-        var referenceErrors = await CheckReferencesAsync(dto.UserId, dto.AccountId, dto.CategoryId);
+        var referenceErrors = await CheckReferencesAsync(userId, dto.AccountId, dto.CategoryId);
         if (referenceErrors.Count > 0)
             return OperationResult<TransactionResponseDto>.ValidationError(referenceErrors);
 
         var transaction = new Transaction()
         {
-            UserId = dto.UserId,
+            UserId = userId,
             AccountId = dto.AccountId,
             CategoryId = dto.CategoryId,
             Description = dto.Description.Trim(),
@@ -93,12 +93,12 @@ public class TransactionService
         return OperationResult<TransactionResponseDto>.Created(transactionResponseDto);
     }
 
-    public async Task<OperationResult<TransactionResponseDto>> UpdateTransaction (Guid id, UpdateTransactionDto dto)
+    public async Task<OperationResult<TransactionResponseDto>> UpdateTransaction (Guid id, UpdateTransactionDto dto, Guid userId)
     {
-        var transaction = await GetTransactionByIdAsync(id);
+        var transaction = await GetTransactionByIdAsync(id, userId);
         if (transaction is null)
         {
-            _logger.LogWarning("Transaction not found: {TransactionId}.", id);
+            _logger.LogWarning("Transaction not found: {TransactionId} for user {UserId}.", id, userId);
             return OperationResult<TransactionResponseDto>.NotFound($"Transaction not found: {id}.");
         }
 
@@ -134,12 +134,12 @@ public class TransactionService
         return OperationResult<TransactionResponseDto>.Success(transactionResponseDto);
     }
 
-    public async Task<OperationResult<TransactionResponseDto>> DeleteTransaction (Guid id)
+    public async Task<OperationResult<TransactionResponseDto>> DeleteTransaction (Guid id, Guid userId)
     {
-        var transaction = await GetTransactionByIdAsync(id);
+        var transaction = await GetTransactionByIdAsync(id, userId);
         if (transaction is null)
         {
-            _logger.LogWarning("Transaction not found: {TransactionId}.", id);
+            _logger.LogWarning("Transaction not found: {TransactionId} for user {UserId}.", id, userId);
             return OperationResult<TransactionResponseDto>.NotFound($"Transaction not found: {id}.");
         }
 
@@ -147,7 +147,7 @@ public class TransactionService
 
         _context.Transactions.Remove(transaction);
         await _context.SaveChangesAsync();
-        _logger.LogInformation("Transaction deleted: {TransactionId}.", id);
+        _logger.LogInformation("Transaction deleted: {TransactionId} for user {UserId}.", id, userId);
 
         return OperationResult<TransactionResponseDto>.Success(transactionResponseDto);
     }
