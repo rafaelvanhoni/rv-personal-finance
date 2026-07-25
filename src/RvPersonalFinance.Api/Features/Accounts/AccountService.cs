@@ -108,7 +108,6 @@ public class AccountService
             return OperationResult<AccountResponseDto>.ValidationError(errors);
         }
 
-        account.UserId = userId;
         account.Name = dto.Name.Trim();
         account.InitialBalance = dto.InitialBalance;
 

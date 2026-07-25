@@ -21,31 +21,31 @@ public class CategoryService
         _updateValidator = updateValidator;
     }
 
-    private async Task<Category?> GetCategoryByIdAsync(Guid id)
+    private async Task<Category?> GetCategoryByIdAsync(Guid id, Guid userId)
     {
-        var category = await _context.Categories.FirstOrDefaultAsync(category => category.Id == id);
+        var category = await _context.Categories.FirstOrDefaultAsync(c => c.Id == id && c.UserId == userId);
         return category;
     }
-    public async Task<OperationResult<CategoryResponseDto>> GetCategoryById(Guid id)
+    public async Task<OperationResult<CategoryResponseDto>> GetCategoryById(Guid id, Guid userId)
     {
-        var category = await GetCategoryByIdAsync(id);
+        var category = await GetCategoryByIdAsync(id, userId);
 
         if (category is null)
         {
-            _logger.LogWarning("Category not found: {CategoryId}.", id);
+            _logger.LogWarning("Category not found: {CategoryId} for user {UserId}.", id, userId);
             return OperationResult<CategoryResponseDto>.NotFound($"Category not found: {id}.");
         }
 
         var categoryResponseDto = ToResponseDto(category);
 
-        _logger.LogInformation("Category retrieved: {CategoryId}.", category.Id);
+        _logger.LogInformation("Category retrieved: {CategoryId} for user {UserId}.", category.Id, category.UserId);
         return OperationResult<CategoryResponseDto>.Success(categoryResponseDto);
     }
 
-    public async Task<OperationResult<IEnumerable<CategoryResponseDto>>> GetAllCategories()
+    public async Task<OperationResult<IEnumerable<CategoryResponseDto>>> GetAllCategories(Guid userId)
     {
-        var categories = await _context.Categories.ToListAsync();
-        _logger.LogInformation("Categories retrieved: {Count}.", categories.Count);
+        var categories = await _context.Categories.Where(c => c.UserId == userId).ToListAsync();
+        _logger.LogInformation("Categories retrieved: {Count} for user {UserId}.", categories.Count, userId);
 
         var categoryResponseDtos = categories
             .Select(ToResponseDto)
@@ -54,7 +54,7 @@ public class CategoryService
         return OperationResult<IEnumerable<CategoryResponseDto>>.Success(categoryResponseDtos);
     }
 
-    public async Task<OperationResult<CategoryResponseDto>> CreateCategory(CreateCategoryDto dto)
+    public async Task<OperationResult<CategoryResponseDto>> CreateCategory(CreateCategoryDto dto, Guid userId)
     {
         var validation = await _createValidator.ValidateAsync(dto);
         if (!validation.IsValid)
@@ -70,25 +70,25 @@ public class CategoryService
 
         var category = new Category()
         {
-            UserId = dto.UserId,
+            UserId = userId,
             Name = dto.Name.Trim(),
         };
 
         await _context.Categories.AddAsync(category);
         await _context.SaveChangesAsync();
-        _logger.LogInformation("Category created: {CategoryId}.", category.Id);
+        _logger.LogInformation("Category created: {CategoryId} for user {UserId}.", category.Id, category.UserId);
 
         var categoryResponseDto = ToResponseDto(category);
 
         return OperationResult<CategoryResponseDto>.Created(categoryResponseDto);
     }
 
-    public async Task<OperationResult<CategoryResponseDto>> UpdateCategory(Guid id, UpdateCategoryDto dto)
+    public async Task<OperationResult<CategoryResponseDto>> UpdateCategory(Guid id, UpdateCategoryDto dto, Guid userId)
     {
-        var category = await GetCategoryByIdAsync(id);
+        var category = await GetCategoryByIdAsync(id, userId);
         if (category is null) 
         {
-            _logger.LogWarning("Category not found: {CategoryId}.", id);
+            _logger.LogWarning("Category not found: {CategoryId} for user {UserId}.", id, userId);
             return OperationResult<CategoryResponseDto>.NotFound($"Category not found: {id}.");
         }
 
@@ -103,24 +103,23 @@ public class CategoryService
             return OperationResult<CategoryResponseDto>.ValidationError(errors);
         }
 
-        category.UserId = dto.UserId;
         category.Name = dto.Name.Trim();
 
         _context.Categories.Update(category);
         await _context.SaveChangesAsync();
-        _logger.LogInformation("Category updated: {CategoryId}.", category.Id);
+        _logger.LogInformation("Category updated: {CategoryId} for user {UserId}.", category.Id, category.UserId);
 
         var categoryResponseDto = ToResponseDto(category);
 
         return OperationResult<CategoryResponseDto>.Success(categoryResponseDto);
     }
 
-    public async Task<OperationResult<CategoryResponseDto>> DeleteCategory(Guid id)
+    public async Task<OperationResult<CategoryResponseDto>> DeleteCategory(Guid id, Guid userId)
     {
-        var category = await GetCategoryByIdAsync(id);
+        var category = await GetCategoryByIdAsync(id, userId);
         if (category is null) 
         {
-            _logger.LogWarning("Category not found: {CategoryId}.", id);
+            _logger.LogWarning("Category not found: {CategoryId} for user {UserId}.", id, userId);
             return OperationResult<CategoryResponseDto>.NotFound($"Category not found: {id}.");
         }
 
@@ -128,7 +127,7 @@ public class CategoryService
 
         _context.Categories.Remove(category);
         await _context.SaveChangesAsync();
-        _logger.LogInformation("Category deleted {CategoryId}.", id);
+        _logger.LogInformation("Category deleted {CategoryId} for user {UserId}.", id, userId);
 
         return OperationResult<CategoryResponseDto>.Success(categoryResponseDto);
     }
