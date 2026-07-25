@@ -1,6 +1,6 @@
 # 💰 RV Personal Finance
 
-> 🚧 **Status:** In progress — Phase 3 (Professional Architecture) complete, plus core domain endpoints: full CRUD with field-level validation, standardized responses, EF Core relationships with ownership checks, global exception handling (RFC 7807), real health checks, and aggregation endpoints (derived account balance and dashboard with spending by category). JWT auth and automated tests are next.
+> 🚧 **Status:** In progress — Core API complete with JWT authentication, BCrypt password hashing, authenticated user ownership, full CRUD, field-level validation, standardized responses, EF Core relationships, global exception handling (RFC 7807), health checks, derived balances, and dashboard aggregation. Automated tests and CI are next.
 
 A personal finance REST API built with **ASP.NET Core Minimal APIs**, **Entity Framework Core** and **PostgreSQL**.
 
@@ -49,11 +49,11 @@ This project is intentionally built **without shortcuts** — each concept is un
 - [x] CRUD: Accounts, Categories, Transactions
 - [x] Request validation with FluentValidation (multiple errors per response, field-level details)
 - [x] Standardized API responses via `OperationResult<T>`
-- [ ] Balance calculation derived from transactions (Income − Expense)
+- [x] Balance calculation derived from transactions (Income − Expense)
 - [ ] Financial history queries
-- [ ] Dashboard: total income, total expenses, balance, spending by category
-- [ ] JWT authentication and user registration
-- [ ] User ownership enforcement on all resources
+- [x] Dashboard: total income, total expenses, balance, spending by category
+- [x] JWT authentication and user registration
+- [x] User ownership enforcement on all resources
 
 ---
 
@@ -80,10 +80,13 @@ RvPersonalFinance/
 │       ├── Infrastructure/
 │       │   └── Persistence/   # AppDbContext and migrations
 │       ├── Features/
-│       │   ├── Accounts/      # AccountDtos, AccountService, AccountEndpoints
-│       │   ├── Categories/    # CategoryDtos, CategoryService, CategoryEndpoints
-│       │   └── Transactions/  # TransactionDtos, TransactionService, TransactionEndpoints
-│       ├── Shared/            # OperationResult<T>, OperationError and HTTP result adapters
+│       │   ├── Accounts/      # Account DTOs, validation, service, and endpoints
+│       │   ├── Auth/          # Registration, login, password hashing, and JWT generation
+│       │   ├── Categories/    # Category DTOs, validation, service, and endpoints
+│       │   ├── Dashboard/     # Financial aggregation and derived balances
+│       │   └── Transactions/  # Transaction DTOs, validation, service, and endpoints
+│       ├── Middleware/        # Global exception handling
+│       ├── Shared/            # OperationResult<T>, errors, claims helpers, and HTTP adapters
 │       └── Program.cs         # Application entry point
 │
 ├── tests/
@@ -108,6 +111,8 @@ RvPersonalFinance/
 - **No Repository Pattern** — EF Core `DbContext` is used directly in Services; `DbSet<T>` already is a repository abstraction. Adding `ITransactionRepository` would be an abstraction over an abstraction with no real problem to solve — there is no requirement to swap ORM or database
 - **Vertical Slice structure** — code organized by domain feature (`Features/Accounts/`, `Features/Transactions/`, etc.) rather than by technical layer; everything related to a feature lives together, reducing cognitive cost for both humans and AI coding agents
 - **OperationResult<T>** — custom result pattern for standardized, predictable API responses
+- **JWT authentication** — authenticated user identity is obtained from JWT claims, never from request DTOs
+- **Ownership enforcement** — every resource query is filtered by resource ID and authenticated `UserId`
 - **DTOs separate from entities** — API contract evolution independent from domain model
 - **Docker from day one** — PostgreSQL runs in containers; development environment matches production
 
@@ -163,6 +168,11 @@ docker compose up -d
 {
   "ConnectionStrings": {
     "DefaultConnection": "Host=localhost;Port=5432;Database=rv_personal_finance;Username=rv_admin;Password=your_password_here"
+  },
+  "Jwt": {
+    "Key": "your_jwt_secret_key_here",
+    "Issuer": "RvPersonalFinance",
+    "ExpiresInMinutes": 60
   }
 }
 ```
@@ -185,6 +195,10 @@ dotnet run --project src/RvPersonalFinance.Api
 http://localhost:5099/scalar
 ```
 
+8. Register a user using `POST /auth/register`.
+
+9. Authenticate using `POST /auth/login` and use the returned JWT to authorize requests in Scalar.
+
 ---
 
 ## 🗺 Roadmap
@@ -204,8 +218,8 @@ http://localhost:5099/scalar
 - [x] Global exception handling middleware + Problem Details (RFC 7807)
 - [x] Real health checks (API + PostgreSQL readiness probe)
 - [x] Balance calculation and dashboard endpoints (derived balance, spending by category via LINQ GroupBy)
-- [ ] JWT authentication
-- [ ] User ownership enforcement
+- [x] JWT authentication
+- [x] User ownership enforcement
 - [ ] Unit tests
 - [ ] Integration tests
 - [ ] API Dockerfile + CI (GitHub Actions)
