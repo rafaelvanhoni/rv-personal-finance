@@ -1,3 +1,5 @@
+using System.Security.Claims;
+using RvPersonalFinance.Api.Domain.Entities;
 using RvPersonalFinance.Api.Shared;
 
 namespace RvPersonalFinance.Api.Features.Accounts;
@@ -6,42 +8,48 @@ public static class AccountEndpoints
 {
     public static void MapAccountEndpoints(this WebApplication app)
     {
-        app.MapGet("/accounts/{id}", async (Guid id, AccountService service) => 
+        app.MapGet("/accounts/{id}", async (Guid id, ClaimsPrincipal user, AccountService service) => 
         {
-            var result = await service.GetAccountById(id);
+            var userId = user.GetUserId();
+            var result = await service.GetAccountById(id, userId);
             return result.ToHttpResult();
-        });
+        }).RequireAuthorization();
 
-        app.MapGet("/accounts", async (AccountService service) =>
+        app.MapGet("/accounts", async (ClaimsPrincipal user, AccountService service) =>
         {
-           var result = await service.GetAllAccounts();
-           return result.ToHttpResult(); 
-        });
+            var userId = user.GetUserId();
+            var result = await service.GetAllAccounts(userId);
+            return result.ToHttpResult(); 
+        }).RequireAuthorization();
 
-        app.MapGet("/accounts/{id}/balance", async (Guid id, AccountService service) =>
+        app.MapGet("/accounts/{id}/balance", async (Guid id, ClaimsPrincipal user, AccountService service) =>
         {
-            var result = await service.CalculateBalance(id);
+            var userId = user.GetUserId();
+            var result = await service.CalculateBalance(id, userId);
             return result.ToHttpResult();
-        });
+        }).RequireAuthorization();
 
-        app.MapPost("/accounts", async (CreateAccountDto dto, AccountService service) =>
+        app.MapPost("/accounts", async (CreateAccountDto dto, ClaimsPrincipal user, AccountService service) =>
         {
-            var result = await service.CreateAccount(dto);
+            var userId = user.GetUserId();
+            var result = await service.CreateAccount(dto, userId);
             if (result.IsSuccess)
                 return Results.Created($"/accounts/{result.Data?.Id}", result);
             return result.ToHttpResult();
-        });
+        }).RequireAuthorization();
 
-        app.MapPut("/accounts/{id}", async (Guid id, UpdateAccountDto dto, AccountService service) =>
+        app.MapPut("/accounts/{id}", async (Guid id, UpdateAccountDto dto, ClaimsPrincipal user, AccountService service) =>
         {
-            var result = await service.UpdateAccount(id, dto);
+            var userId = user.GetUserId();
+            var result = await service.UpdateAccount(id, userId, dto);
             return result.ToHttpResult();
-        });
+        }).RequireAuthorization();
 
-        app.MapDelete("/accounts/{id}", async (Guid id, AccountService service) =>
+        app.MapDelete("/accounts/{id}", async (Guid id, ClaimsPrincipal user, AccountService service) =>
         {
-            var result = await service.DeleteAccount(id);
+            var userId = user.GetUserId();
+            var result = await service.DeleteAccount(id, userId);
             return result.ToHttpResult();
-        });
+        }).RequireAuthorization();
     }
 }

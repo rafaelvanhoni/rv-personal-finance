@@ -7,9 +7,6 @@ public class CreateAccountValidator : AbstractValidator<CreateAccountDto>
 
     public CreateAccountValidator()
     {
-        RuleFor(x => x.UserId)
-            .NotEqual(Guid.Empty).WithMessage("UserId is required.");
-
         RuleFor(x => x.Name)
             .NotEmpty().WithMessage("Name is required.")
             .MaximumLength(80).WithMessage("Name must not exceed 80 characters.");
@@ -27,9 +24,6 @@ public class UpdateAccountValidator : AbstractValidator<UpdateAccountDto>
 {
     public UpdateAccountValidator()
     {
-        RuleFor(x => x.UserId)
-            .NotEqual(Guid.Empty).WithMessage("UserId is required.");
-
         RuleFor(x => x.Name)
             .NotEmpty().WithMessage("Name is required.")
             .MaximumLength(80).WithMessage("Name must not exceed 80 characters.");

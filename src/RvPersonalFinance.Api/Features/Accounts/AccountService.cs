@@ -23,32 +23,32 @@ public class AccountService
         _updateValidator = updateValidator;
     }
 
-    private async Task<Account?> GetAccountByIdAsync(Guid id)
+    private async Task<Account?> GetAccountByIdAsync(Guid id, Guid userId)
     {
-        var account = await _context.Accounts.FirstOrDefaultAsync(account => account.Id == id);
+        var account = await _context.Accounts.FirstOrDefaultAsync(a => a.Id == id && a.UserId == userId);
         return account;
     }
-    public async Task<OperationResult<AccountResponseDto>> GetAccountById(Guid id)
+    public async Task<OperationResult<AccountResponseDto>> GetAccountById(Guid id, Guid userId)
     {
-        var account = await GetAccountByIdAsync(id);
+        var account = await GetAccountByIdAsync(id, userId);
 
         if (account is null)
         {
-            _logger.LogWarning("Account not found: {AccountId}.", id);
+            _logger.LogWarning("Account not found: {AccountId} for user {UserId}.", id, userId);
 
             return OperationResult<AccountResponseDto>.NotFound($"Account not found: {id}.");
         }
 
         var accountResponseDto = ToResponseDto(account);
 
-        _logger.LogInformation("Account retrieved: {AccountId}.", account.Id);
+        _logger.LogInformation("Account retrieved: {AccountId} for user {UserID}.", account.Id, account.UserId);
         return OperationResult<AccountResponseDto>.Success(accountResponseDto);
     }
 
-    public async Task<OperationResult<IEnumerable<AccountResponseDto>>> GetAllAccounts() 
+    public async Task<OperationResult<IEnumerable<AccountResponseDto>>> GetAllAccounts(Guid userId) 
     {
-        var accounts = await _context.Accounts.ToListAsync();
-        _logger.LogInformation("Accounts retrieved: {Count}.", accounts.Count);
+        var accounts = await _context.Accounts.Where(a => a.UserId == userId).ToListAsync();
+        _logger.LogInformation("Accounts retrieved: {Count} for user {UserId}.", accounts.Count, userId);
 
         var accountResponseDtos = accounts
             .Select(ToResponseDto)
@@ -57,7 +57,7 @@ public class AccountService
         return OperationResult<IEnumerable<AccountResponseDto>>.Success(accountResponseDtos);
     }
 
-    public async Task<OperationResult<AccountResponseDto>> CreateAccount (CreateAccountDto dto)
+    public async Task<OperationResult<AccountResponseDto>> CreateAccount (CreateAccountDto dto, Guid userId)
     {
 
         var validation = await _createValidator.ValidateAsync(dto);
@@ -74,7 +74,7 @@ public class AccountService
 
         var account = new Account
         {
-            UserId = dto.UserId,
+            UserId = userId,
             Name = dto.Name.Trim(),
             InitialBalance = dto.InitialBalance,
         };
@@ -88,12 +88,12 @@ public class AccountService
         return OperationResult<AccountResponseDto>.Created(accountResponseDto);
     }
 
-    public async Task<OperationResult<AccountResponseDto>> UpdateAccount (Guid id, UpdateAccountDto dto)
+    public async Task<OperationResult<AccountResponseDto>> UpdateAccount (Guid id, Guid userId, UpdateAccountDto dto)
     {
-        var account = await GetAccountByIdAsync(id);
+        var account = await GetAccountByIdAsync(id, userId);
         if (account is null)
         {
-            _logger.LogWarning("Account not found: {AccountId}.", id);
+            _logger.LogWarning("Account not found: {AccountId} for user {UserId}.", id, userId);
             return OperationResult<AccountResponseDto>.NotFound($"Account not found: {id}.");
         }
 
@@ -108,7 +108,7 @@ public class AccountService
             return OperationResult<AccountResponseDto>.ValidationError(errors);
         }
 
-        account.UserId = dto.UserId;
+        account.UserId = userId;
         account.Name = dto.Name.Trim();
         account.InitialBalance = dto.InitialBalance;
 
@@ -121,12 +121,12 @@ public class AccountService
         return OperationResult<AccountResponseDto>.Success(accountResponseDto);
     }
 
-    public async Task<OperationResult<AccountResponseDto>> DeleteAccount(Guid id)
+    public async Task<OperationResult<AccountResponseDto>> DeleteAccount(Guid id, Guid userId)
     {
-        var account = await GetAccountByIdAsync(id);
+        var account = await GetAccountByIdAsync(id, userId);
         if (account is null)
         {
-            _logger.LogWarning("Account not found: {AccountId}.", id);
+            _logger.LogWarning("Account not found: {AccountId} for user {UserId}.", id, userId);
             return OperationResult<AccountResponseDto>.NotFound($"Account not found: {id}.");
         }
 
@@ -134,18 +134,18 @@ public class AccountService
 
         _context.Accounts.Remove(account);
         await _context.SaveChangesAsync();
-        _logger.LogInformation("Account deleted: {AccountId}.", id);
+        _logger.LogInformation("Account deleted: {AccountId} for user {UserId}.", id, userId);
 
         return OperationResult<AccountResponseDto>.Success(accountResponseDto);
     }
 
-    public async Task<OperationResult<AccountBalanceDto>> CalculateBalance(Guid id)
+    public async Task<OperationResult<AccountBalanceDto>> CalculateBalance(Guid id, Guid userId)
     {
-        var account = await GetAccountByIdAsync(id);
+        var account = await GetAccountByIdAsync(id, userId);
 
         if (account is null)
         {
-            _logger.LogWarning("Account not found: {AccountId}.", id);
+            _logger.LogWarning("Account not found: {AccountId} for user {UserId}.", id, userId);
             return OperationResult<AccountBalanceDto>.NotFound($"Account not found: {id}.");
         }
 

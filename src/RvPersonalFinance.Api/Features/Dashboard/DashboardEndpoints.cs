@@ -10,7 +10,7 @@ public static class DashboardEndpoints
     {
         app.MapGet("/dashboard", async (ClaimsPrincipal user, DashboardService service) =>
         {
-            var userId = Guid.Parse(user.FindFirstValue(JwtRegisteredClaimNames.Sub)!);
+            var userId = user.GetUserId();
             var result = await service.GetDashboard(userId);
             return result.ToHttpResult();
         }).RequireAuthorization();
