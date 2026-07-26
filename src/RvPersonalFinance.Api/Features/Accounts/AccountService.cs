@@ -129,6 +129,17 @@ public class AccountService
             return OperationResult<AccountResponseDto>.NotFound($"Account not found: {id}.");
         }
 
+        var isInUse = await _context.Transactions.AnyAsync(t => t.AccountId == account.Id && t.UserId == account.UserId);
+        if (isInUse)
+        {
+            _logger.LogWarning(
+                "Account cannot be deleted because it is in use: {AccountId} for user {UserId}.",
+                account.Id,
+                account.UserId);
+            return OperationResult<AccountResponseDto>.Conflict(
+                $"Account cannot be deleted because it has linked transactions: {id}.");
+        }
+
         var accountResponseDto = ToResponseDto(account);
 
         _context.Accounts.Remove(account);

@@ -123,11 +123,23 @@ public class CategoryService
             return OperationResult<CategoryResponseDto>.NotFound($"Category not found: {id}.");
         }
 
+        var isInUse = await _context.Transactions
+            .AnyAsync(t => t.CategoryId == category.Id && t.UserId == category.UserId);
+        if (isInUse)
+        {
+            _logger.LogWarning(
+                "Category cannot be deleted because it is in use: {CategoryId} for user {UserId}.",
+                category.Id, 
+                category.UserId);
+            return OperationResult<CategoryResponseDto>.Conflict(
+                $"Category cannot be deleted because it has linked transactions: {id}.");
+        }
+
         var categoryResponseDto = ToResponseDto(category);
 
         _context.Categories.Remove(category);
         await _context.SaveChangesAsync();
-        _logger.LogInformation("Category deleted {CategoryId} for user {UserId}.", id, userId);
+        _logger.LogInformation("Category deleted: {CategoryId} for user {UserId}.", id, userId);
 
         return OperationResult<CategoryResponseDto>.Success(categoryResponseDto);
     }
