@@ -41,7 +41,7 @@ public static class AccountEndpoints
         app.MapPut("/accounts/{id}", async (Guid id, UpdateAccountDto dto, ClaimsPrincipal user, AccountService service) =>
         {
             var userId = user.GetUserId();
-            var result = await service.UpdateAccount(id, userId, dto);
+            var result = await service.UpdateAccount(id, dto, userId);
             return result.ToHttpResult();
         }).RequireAuthorization();
 

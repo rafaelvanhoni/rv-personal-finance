@@ -88,7 +88,7 @@ public class AccountService
         return OperationResult<AccountResponseDto>.Created(accountResponseDto);
     }
 
-    public async Task<OperationResult<AccountResponseDto>> UpdateAccount (Guid id, Guid userId, UpdateAccountDto dto)
+    public async Task<OperationResult<AccountResponseDto>> UpdateAccount (Guid id, UpdateAccountDto dto, Guid userId)
     {
         var account = await GetAccountByIdAsync(id, userId);
         if (account is null)
