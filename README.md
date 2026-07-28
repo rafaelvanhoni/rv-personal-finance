@@ -1,6 +1,6 @@
 # 💰 RV Personal Finance
 
-> 🚧 **Status:** In progress — Core API complete with JWT authentication, BCrypt password hashing, authenticated user ownership, full CRUD, field-level validation, standardized responses, EF Core relationships, global exception handling (RFC 7807), health checks, derived balances, and dashboard aggregation. Automated tests and CI are next.
+> 🚧 **Status:** In progress — Core API complete with JWT authentication, BCrypt password hashing, authenticated user ownership, full CRUD, field-level validation, standardized responses, EF Core relationships, global exception handling (RFC 7807), health checks, derived balances, and dashboard aggregation. Unit tests underway (Account service fully covered); integration tests and CI are next.
 
 A personal finance REST API built with **ASP.NET Core Minimal APIs**, **Entity Framework Core** and **PostgreSQL**.
 
@@ -59,11 +59,9 @@ This project is intentionally built **without shortcuts** — each concept is un
 
 ## 🧪 Tests
 
-Planned test coverage:
-
-- **Unit tests** — service layer business rules (xUnit + Moq)
-- **Integration tests** — real HTTP requests via WebApplicationFactory
-- **Isolated PostgreSQL** for integration test environments
+- **Unit tests** — xUnit + EF Core InMemory (real `AppDbContext`, real validators, no mocking — service tests run against an in-memory database instead of stubbing the persistence layer). `AccountService` fully covered (13 scenarios: CRUD, cross-user ownership, validation failures, conflict on delete with linked transactions). `CategoryService` and `TransactionService` next, following the same pattern.
+- **Integration tests** (planned) — real HTTP requests via WebApplicationFactory
+- **Isolated PostgreSQL** (planned) for integration test environments
 
 ---
 
@@ -126,8 +124,8 @@ RvPersonalFinance/
 - PostgreSQL
 - Docker / Docker Compose
 - xUnit
-- Moq
-- WebApplicationFactory
+- EF Core InMemory (unit tests)
+- WebApplicationFactory (integration tests, planned)
 - ILogger (structured logging)
 
 ---
@@ -220,7 +218,7 @@ http://localhost:5099/scalar
 - [x] Balance calculation and dashboard endpoints (derived balance, spending by category via LINQ GroupBy)
 - [x] JWT authentication
 - [x] User ownership enforcement
-- [ ] Unit tests
+- [ ] Unit tests (Account service done; Category and Transaction pending)
 - [ ] Integration tests
 - [ ] API Dockerfile + CI (GitHub Actions)
 - [ ] Production deploy (home lab)
