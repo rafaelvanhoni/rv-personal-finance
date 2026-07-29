@@ -49,6 +49,14 @@ public class AccountServiceTests
     
         // Then
         Assert.True(result.IsSuccess);
+        Assert.NotNull(result.Data);
+        Assert.Equal(ResultStatus.Success, result.Status);
+
+        Assert.Equal(account.Id, result.Data.Id);
+        Assert.Equal(userId, result.Data.UserId);
+        Assert.Equal(account.Name, result.Data.Name);
+        Assert.Equal(account.InitialBalance, result.Data.InitialBalance);
+        Assert.Equal(account.CreatedAt, result.Data.CreatedAt);
     }
 
     [Fact]
@@ -68,9 +76,11 @@ public class AccountServiceTests
     
         // Then
         Assert.False(result.IsSuccess);
+        Assert.Null(result.Data);
+        Assert.Equal(ResultStatus.NotFound, result.Status);
 
-        var errors = Assert.Single(result.Errors);
-        Assert.Equal($"Account not found: {accountId}.", errors.Message);
+        var error = Assert.Single(result.Errors);
+        Assert.Equal($"Account not found: {accountId}.", error.Message);
     }
 
     [Fact]
@@ -79,11 +89,12 @@ public class AccountServiceTests
         // Given
         await using var context = CreateDbContext();
 
-        var userId = Guid.CreateVersion7();
+        var userA = Guid.CreateVersion7();
+        var userB = Guid.CreateVersion7();
 
         var account = new Account()
         {
-            UserId = userId,
+            UserId = userA,
             Name = "Santander",
             InitialBalance = 100m
         };
@@ -94,49 +105,79 @@ public class AccountServiceTests
         var service = CreateService(context);
 
         // When
-        var result = await service.GetAccountById(account.Id, Guid.CreateVersion7());
+        var result = await service.GetAccountById(account.Id, userB);
     
         // Then
         Assert.False(result.IsSuccess);
+        Assert.Null(result.Data);
+        Assert.Equal(ResultStatus.NotFound, result.Status);
+
+        var error = Assert.Single(result.Errors);
+        Assert.Equal($"Account not found: {account.Id}.", error.Message);
     }
 
     [Fact]
-    public async Task GetAccounts_WhenUserHasAccounts_ShouldReturnAccounts()
+    public async Task GetAllAccounts_WhenUserHasAccounts_ShouldReturnAccounts()
     {
         // Given
         await using var context = CreateDbContext();
 
-        var userId = Guid.CreateVersion7();
+        var userA = Guid.CreateVersion7();
+        var userB = Guid.CreateVersion7();
 
-        var account = new Account()
+        var account1 = new Account()
         {
-            UserId = userId,
-            Name = "HSBC",
+            UserId = userA,
+            Name = "Itau",
             InitialBalance = 1000.00m
         };
     
-        context.Add(account);
+        var account2 = new Account()
+        {
+            UserId = userA,
+            Name = "Santander",
+            InitialBalance = 2000.00m
+        };
+
+        var account3 = new Account()
+        {
+            UserId = userB,
+            Name = "Nubank",
+            InitialBalance = 3000.00m
+        };
+
+        context.AddRange(account1, account2, account3);
         await context.SaveChangesAsync();
 
         var service = CreateService(context);
         
         // When
-        var result = await service.GetAllAccounts(userId);
+        var result = await service.GetAllAccounts(userA);
 
         // Then
         Assert.True(result.IsSuccess);
         Assert.NotNull(result.Data);
+        Assert.Equal(ResultStatus.Success, result.Status);
 
-        var returnedAccount = Assert.Single(result.Data);
-        Assert.Equal(account.Id, returnedAccount.Id);
-        Assert.Equal(account.UserId, returnedAccount.UserId);
-        Assert.Equal(account.Name, returnedAccount.Name);
-        Assert.Equal(account.InitialBalance, returnedAccount.InitialBalance);
-        Assert.Equal(account.CreatedAt, returnedAccount.CreatedAt);
+        var returnedAccounts = result.Data.ToList();
+        Assert.Equal(2, returnedAccounts.Count);
+        Assert.DoesNotContain(returnedAccounts, a => a.UserId == userB);
+
+        var returnedAccount1 = returnedAccounts.Single(a => a.Id == account1.Id);
+        Assert.Equal(userA, returnedAccount1.UserId);
+        Assert.Equal(account1.Name, returnedAccount1.Name);
+        Assert.Equal(account1.InitialBalance, returnedAccount1.InitialBalance);
+        Assert.Equal(account1.CreatedAt, returnedAccount1.CreatedAt);
+
+        var returnedAccount2 = returnedAccounts.Single(a => a.Id == account2.Id);
+        Assert.Equal(userA, returnedAccount2.UserId);
+        Assert.Equal(account2.Name, returnedAccount2.Name);
+        Assert.Equal(account2.InitialBalance, returnedAccount2.InitialBalance);
+        Assert.Equal(account2.CreatedAt, returnedAccount2.CreatedAt);
     }
 
     [Fact]
-    public async Task GetAccounts_WhenUserHasNoAccounts_ShouldReturnEmptyList()
+    public async Task GetAllAccounts_WhenUserHasNoAccounts_ShouldReturnEmptyList()
     {
         // Given
         await using var context = CreateDbContext();
@@ -161,6 +202,7 @@ public class AccountServiceTests
         // Then
         Assert.True(result.IsSuccess);
         Assert.NotNull(result.Data);
+        Assert.Equal(ResultStatus.Success, result.Status);
         Assert.Empty(result.Data);
     }
 
@@ -221,7 +263,7 @@ public class AccountServiceTests
         Assert.False(result.IsSuccess);
         Assert.Null(result.Data);
         Assert.Equal(ResultStatus.ValidationError, result.Status);
-        Assert.Empty(await context.Accounts.ToListAsync());
+        Assert.False(await context.Accounts.AnyAsync());
     }
 
     [Fact]
@@ -264,11 +306,10 @@ public class AccountServiceTests
         Assert.Equal(accountDto.Name, result.Data.Name);
         Assert.Equal(accountDto.InitialBalance, result.Data.InitialBalance);
 
-        var accountUpdated = await context.Accounts.SingleAsync(a => a.Id == accountId);
-        Assert.Equal(accountId, accountUpdated.Id);
-        Assert.Equal(userId, accountUpdated.UserId);
-        Assert.Equal(accountDto.Name, accountUpdated.Name);
-        Assert.Equal(accountDto.InitialBalance, accountUpdated.InitialBalance);
+        var updatedAccount = await context.Accounts.SingleAsync(a => a.Id == accountId);
+        Assert.Equal(userId, updatedAccount.UserId);
+        Assert.Equal(accountDto.Name, updatedAccount.Name);
+        Assert.Equal(accountDto.InitialBalance, updatedAccount.InitialBalance);
     }
 
     [Fact]
@@ -470,8 +511,7 @@ public class AccountServiceTests
         Assert.Null(result.Data);
         Assert.Equal(ResultStatus.Conflict, result.Status);
 
-        var existingAccount = await context.Accounts.SingleOrDefaultAsync(a => a.Id == accountId);
-        Assert.NotNull(existingAccount);
+        var existingAccount = await context.Accounts.SingleAsync(a => a.Id == accountId);
        
         Assert.Equal(userId, existingAccount.UserId);
         Assert.Equal("Crefisa", existingAccount.Name);
