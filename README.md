@@ -1,6 +1,6 @@
 # 💰 RV Personal Finance
 
-> 🚧 **Status:** In progress — Core API complete with JWT authentication, BCrypt password hashing, authenticated user ownership, full CRUD, field-level validation, standardized responses, EF Core relationships, global exception handling (RFC 7807), health checks, derived balances, and dashboard aggregation. Unit tests underway (Account service fully covered); integration tests and CI are next.
+> 🚧 **Status:** In progress — Core API complete with JWT authentication, BCrypt password hashing, authenticated user ownership, full CRUD, field-level validation, standardized responses, EF Core relationships, global exception handling (RFC 7807), health checks, derived balances, and dashboard aggregation. Unit test suite complete (76 tests: Account, Category and Transaction services, plus validators); integration tests and CI are next.
 
 A personal finance REST API built with **ASP.NET Core Minimal APIs**, **Entity Framework Core** and **PostgreSQL**.
 
@@ -59,7 +59,7 @@ This project is intentionally built **without shortcuts** — each concept is un
 
 ## 🧪 Tests
 
-- **Unit tests** — xUnit + EF Core InMemory (real `AppDbContext`, real validators, no mocking — service tests run against an in-memory database instead of stubbing the persistence layer). `AccountService` fully covered (13 scenarios: CRUD, cross-user ownership, validation failures, conflict on delete with linked transactions). `CategoryService` and `TransactionService` next, following the same pattern.
+- **Unit tests** — xUnit + EF Core InMemory (real `AppDbContext`, real validators, no mocking — service tests run against an in-memory database instead of stubbing the persistence layer). All three services fully covered: `AccountService` (13 scenarios), `CategoryService` (13 scenarios), `TransactionService` (16 scenarios — CRUD, cross-user ownership, validation failures, conflict on delete with linked transactions, and reference validation via `CheckReferencesAsync`: both non-existent references and references that exist but belong to another user). 76 tests total across service and validator suites.
 - **Integration tests** (planned) — real HTTP requests via WebApplicationFactory
 - **Isolated PostgreSQL** (planned) for integration test environments
 
@@ -218,7 +218,7 @@ http://localhost:5099/scalar
 - [x] Balance calculation and dashboard endpoints (derived balance, spending by category via LINQ GroupBy)
 - [x] JWT authentication
 - [x] User ownership enforcement
-- [ ] Unit tests (Account service done; Category and Transaction pending)
+- [x] Unit tests (Account, Category and Transaction services — 76 tests total)
 - [ ] Integration tests
 - [ ] API Dockerfile + CI (GitHub Actions)
 - [ ] Production deploy (home lab)
