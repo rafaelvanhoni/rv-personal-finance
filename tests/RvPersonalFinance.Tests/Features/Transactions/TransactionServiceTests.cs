@@ -534,6 +534,24 @@ public class TransactionServiceTests
         var accountId = Guid.CreateVersion7();
         var categoryId = Guid.CreateVersion7();
 
+        var user = new User()
+        { 
+            Id = userId 
+        };
+        var account = new Account() 
+        { 
+            Id = accountId, 
+            UserId = userId, 
+            Name = "Banco do Brasil", 
+            InitialBalance = 1000m 
+        };
+        var category = new Category() 
+        { 
+            Id = categoryId, 
+            UserId = userId, 
+            Name = "Alimentação" 
+        };
+
         var transaction = new Transaction()
         {
             Id = transactionId,
@@ -546,12 +564,20 @@ public class TransactionServiceTests
             TransactionDate = DateOnly.FromDateTime(DateTime.UtcNow)
         };
 
+        context.Users.Add(user);
+        context.Accounts.Add(account);
+        context.Categories.Add(category);
         context.Transactions.Add(transaction);
         await context.SaveChangesAsync();
 
         var dto = new UpdateTransactionDto()
         {
-            Description = "Another Description"
+            AccountId = accountId,
+            CategoryId = categoryId,
+            Description = "Another Description",
+            Amount = 250m,
+            Type = TransactionType.Income,
+            TransactionDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-1))
         };
 
         var service = CreateService(context);
@@ -561,8 +587,26 @@ public class TransactionServiceTests
     
         // Then
         Assert.True(result.IsSuccess);
-        Assert.NotEmpty(result.Data);
+        Assert.NotNull(result.Data);
+        Assert.Equal(ResultStatus.Success, result.Status);
 
+        Assert.Equal(transactionId, result.Data.Id);
+        Assert.Equal(userId, result.Data.UserId);
+        Assert.Equal(dto.AccountId, result.Data.AccountId);
+        Assert.Equal(dto.CategoryId, result.Data.CategoryId);
+        Assert.Equal(dto.Description, result.Data.Description);
+        Assert.Equal(dto.Amount, result.Data.Amount);
+        Assert.Equal(dto.Type, result.Data.Type);
+        Assert.Equal(dto.TransactionDate, result.Data.TransactionDate);
+
+        var updatedTransaction = await context.Transactions.SingleAsync(t => t.Id == transactionId);
+
+        Assert.Equal(userId, updatedTransaction.UserId);
+        Assert.Equal(dto.AccountId, updatedTransaction.AccountId);
+        Assert.Equal(dto.CategoryId, updatedTransaction.CategoryId);
+        Assert.Equal(dto.Description, updatedTransaction.Description);
+        Assert.Equal(dto.Amount, updatedTransaction.Amount);
+        Assert.Equal(dto.Type, updatedTransaction.Type);
+        Assert.Equal(dto.TransactionDate, updatedTransaction.TransactionDate);
     }
-
 }
