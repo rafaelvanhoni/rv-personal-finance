@@ -182,11 +182,12 @@ public class AccountServiceTests
         // Given
         await using var context = CreateDbContext();
 
-        var userId = Guid.CreateVersion7();
+        var userA = Guid.CreateVersion7();
+        var userB = Guid.CreateVersion7();
 
         var accountFromAnotherUser = new Account()
         {
-            UserId = Guid.CreateVersion7(),
+            UserId = userB,
             Name = "Itaú",
             InitialBalance = 300m
         };
@@ -197,7 +198,7 @@ public class AccountServiceTests
         var service = CreateService(context);
 
         // When
-        var result = await service.GetAllAccounts(userId);
+        var result = await service.GetAllAccounts(userA);
 
         // Then
         Assert.True(result.IsSuccess);
