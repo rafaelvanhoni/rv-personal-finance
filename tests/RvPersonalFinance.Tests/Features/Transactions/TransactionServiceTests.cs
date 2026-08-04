@@ -523,4 +523,46 @@ public class TransactionServiceTests
         Assert.Equal($"Category not found: {categoryId}.", error.Message);
     }
 
+    [Fact]
+    public async Task Update_WhenTransactionExists_ShouldUpdateTransaction()
+    {
+        // Given
+        await using var context = CreateDbContext();
+
+        var transactionId = Guid.CreateVersion7();
+        var userId = Guid.CreateVersion7();
+        var accountId = Guid.CreateVersion7();
+        var categoryId = Guid.CreateVersion7();
+
+        var transaction = new Transaction()
+        {
+            Id = transactionId,
+            UserId = userId,
+            AccountId = accountId,
+            CategoryId = categoryId,
+            Description = "Compra",
+            Amount = 100m,
+            Type = TransactionType.Expense,
+            TransactionDate = DateOnly.FromDateTime(DateTime.UtcNow)
+        };
+
+        context.Transactions.Add(transaction);
+        await context.SaveChangesAsync();
+
+        var dto = new UpdateTransactionDto()
+        {
+            Description = "Another Description"
+        };
+
+        var service = CreateService(context);
+        
+        // When
+        var result = await service.UpdateTransaction(transactionId, dto, userId);
+    
+        // Then
+        Assert.True(result.IsSuccess);
+        Assert.NotEmpty(result.Data);
+
+    }
+
 }
