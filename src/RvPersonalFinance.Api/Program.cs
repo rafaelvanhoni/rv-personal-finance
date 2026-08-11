@@ -81,3 +81,5 @@ app.MapTransactionEndpoints();
 app.MapDashboardEndpoints();
 
 app.Run();
+
+public partial class Program { }
