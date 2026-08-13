@@ -80,7 +80,7 @@ public class AuthIntegrationTests : IClassFixture<CustomWebApplicationFactory>
 
         // When
         var responseLogin = await _client.PostAsJsonAsync("auth/login", requestLogin);
-        var loginResult = await responseLogin.Content.ReadFromJsonAsync<LoginResponseEnvelope>();
+        var loginResult = await responseLogin.Content.ReadFromJsonAsync<ResponseEnvelope<LoginResponseDto>>();
 
 
         // Then
@@ -112,7 +112,7 @@ public class AuthIntegrationTests : IClassFixture<CustomWebApplicationFactory>
 
         // When
         var responseLogin = await _client.PostAsJsonAsync("auth/login", requestLogin);
-        var loginResult = await responseLogin.Content.ReadFromJsonAsync<LoginResponseEnvelope>();
+        var loginResult = await responseLogin.Content.ReadFromJsonAsync<ResponseEnvelope<LoginResponseDto>>();
 
 
         // Then
@@ -120,11 +120,6 @@ public class AuthIntegrationTests : IClassFixture<CustomWebApplicationFactory>
         Assert.NotNull(loginResult);
         Assert.Null(loginResult.Data);
 
-    }
-
-    private class LoginResponseEnvelope
-    {
-        public LoginResponseDto? Data {get; set; }
     }
 }
 
