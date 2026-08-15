@@ -51,4 +51,46 @@ public class TransactionIntegrationTests : IntegrationTestBase
         // Then
         Assert.Equal(HttpStatusCode.Created, responseTransaction.StatusCode);
     }
+
+    [Fact]
+    public async Task CreateTransaction_WhenAccountBelongsToAnotherUser_ShouldReturnValidationError()
+    {
+        // Given
+        var userA = await RegisterAndLoginAsync();
+        var userB = await RegisterAndLoginAsync();
+
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", userA.Login.Token);
+
+        var account = await CreateAccountAsync();
+
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", userB.Login.Token);
+
+        var dtoCategory = new CreateCategoryDto()
+        {
+            Name = $"Category {Guid.CreateVersion7()}"
+        };
+
+        var responseCategory = await _client.PostAsJsonAsync("/categories", dtoCategory);
+        Assert.Equal(HttpStatusCode.Created, responseCategory.StatusCode);
+
+        var category = await responseCategory.Content.ReadFromJsonAsync<ResponseEnvelope<CategoryResponseDto>>();
+        Assert.NotNull(category);
+        Assert.NotNull(category.Data);
+
+        var dtoTransaction = new CreateTransactionDto()
+        {
+            AccountId = account.Id,
+            CategoryId = category.Data.Id,
+            Description = $"Transaction {Guid.CreateVersion7()}",
+            Amount = 500m,
+            Type = TransactionType.Expense,
+            TransactionDate = DateOnly.FromDateTime(DateTime.UtcNow)
+        };
+
+        // When
+        var responseTransaction = await _client.PostAsJsonAsync("/transactions", dtoTransaction);
+    
+        // Then
+        Assert.Equal(HttpStatusCode.BadRequest, responseTransaction.StatusCode);
+    }
 }
