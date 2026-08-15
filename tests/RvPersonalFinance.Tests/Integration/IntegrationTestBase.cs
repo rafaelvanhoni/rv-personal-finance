@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Http.Json;
+using RvPersonalFinance.Api.Features.Accounts;
 using RvPersonalFinance.Api.Features.Auth;
 
 namespace RvPersonalFinance.Tests.Integration;
@@ -43,5 +44,23 @@ public abstract class IntegrationTestBase : IClassFixture<CustomWebApplicationFa
         Assert.NotNull(resultLogin.Data);
         
         return (requestRegister, resultLogin.Data);
+    }
+
+    protected async Task<AccountResponseDto> CreateAccountAsync()
+    {
+        var dtoAccount = new CreateAccountDto()
+        {
+            Name = $"Account {Guid.CreateVersion7()}",
+            InitialBalance = 0m,
+        };    
+
+        var responseAccount = await _client.PostAsJsonAsync("/accounts", dtoAccount);
+        Assert.Equal(HttpStatusCode.Created, responseAccount.StatusCode);
+
+        var account = await responseAccount.Content.ReadFromJsonAsync<ResponseEnvelope<AccountResponseDto>>();
+        Assert.NotNull(account);
+        Assert.NotNull(account.Data);
+        
+        return account.Data;
     }
 }

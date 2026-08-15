@@ -1,7 +1,6 @@
 using System.Net;
 using System.Net.Http.Json;
 using System.Net.Http.Headers;
-using RvPersonalFinance.Api.Features.Auth;
 using RvPersonalFinance.Api.Features.Accounts;
 
 namespace RvPersonalFinance.Tests.Integration;

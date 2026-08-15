@@ -1,5 +1,4 @@
 using System.Net;
-using RvPersonalFinance.Api.Features.Accounts;
 using RvPersonalFinance.Api.Features.Categories;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
@@ -22,18 +21,7 @@ public class TransactionIntegrationTests : IntegrationTestBase
         var user = await RegisterAndLoginAsync();
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", user.Login.Token);
 
-        var dtoAccount = new CreateAccountDto()
-        {
-            Name = $"Account {Guid.CreateVersion7()}",
-            InitialBalance = 0m,
-        };    
-
-        var responseAccount = await _client.PostAsJsonAsync("/accounts", dtoAccount);
-        Assert.Equal(HttpStatusCode.Created, responseAccount.StatusCode);
-
-        var account = await responseAccount.Content.ReadFromJsonAsync<ResponseEnvelope<AccountResponseDto>>();
-        Assert.NotNull(account);
-        Assert.NotNull(account.Data);
+        var account = await CreateAccountAsync();
 
         var dtoCategory = new CreateCategoryDto()
         {
@@ -49,7 +37,7 @@ public class TransactionIntegrationTests : IntegrationTestBase
 
         var dtoTransaction = new CreateTransactionDto()
         {
-            AccountId = account.Data.Id,
+            AccountId = account.Id,
             CategoryId = category.Data.Id,
             Description = $"Transaction {Guid.CreateVersion7()}",
             Amount = 1000m,
