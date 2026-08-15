@@ -6,13 +6,12 @@ using RvPersonalFinance.Api.Features.Accounts;
 
 namespace RvPersonalFinance.Tests.Integration;
 
-public class AccountIntegrationTests : IClassFixture<CustomWebApplicationFactory>
+public class AccountIntegrationTests : IntegrationTestBase
 {
 
-    private readonly HttpClient _client;
-    public AccountIntegrationTests(CustomWebApplicationFactory factory)
+    public AccountIntegrationTests(CustomWebApplicationFactory factory) : base(factory)
     {
-        _client = factory.CreateClient();
+        
     }
 
     [Fact]
@@ -81,39 +80,6 @@ public class AccountIntegrationTests : IClassFixture<CustomWebApplicationFactory
         Assert.Contains(accounts.Data, a => a.Id == accountA2.Data.Id);
         Assert.DoesNotContain(accounts.Data, a => a.Id == accountB.Data.Id);
 
-    }
-
-    private async Task <(RegisterDto Register, LoginResponseDto Login)> RegisterAndLoginAsync()
-    {
-
-        var id = Guid.CreateVersion7();
-        var name = $"Usuario {id}";
-        var email = $"usuario_{id}@teste.com";
-        var password = "12345";
-
-        var requestRegister = new RegisterDto()
-        {
-            Name = name,
-            Email = email,
-            Password = password
-        };
-        var requestLogin = new LoginDto()
-        {
-            Email = email,
-            Password = password
-        };        
-
-        var responseRegister = await _client.PostAsJsonAsync("auth/register", requestRegister);
-        Assert.Equal(HttpStatusCode.Created, responseRegister.StatusCode);
-
-        var responseLogin = await _client.PostAsJsonAsync("auth/login", requestLogin);
-        Assert.Equal(HttpStatusCode.OK, responseLogin.StatusCode);
-
-        var resultLogin = await responseLogin.Content.ReadFromJsonAsync<ResponseEnvelope<LoginResponseDto>>();
-        Assert.NotNull(resultLogin);
-        Assert.NotNull(resultLogin.Data);
-        
-        return (requestRegister, resultLogin.Data);
     }
 }
 
