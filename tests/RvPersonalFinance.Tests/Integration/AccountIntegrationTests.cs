@@ -2,6 +2,9 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Net.Http.Headers;
 using RvPersonalFinance.Api.Features.Accounts;
+using RvPersonalFinance.Api.Features.Categories;
+using RvPersonalFinance.Api.Features.Transactions;
+using RvPersonalFinance.Api.Domain.Enums;
 
 namespace RvPersonalFinance.Tests.Integration;
 
@@ -79,6 +82,48 @@ public class AccountIntegrationTests : IntegrationTestBase
         Assert.Contains(accounts.Data, a => a.Id == accountA2.Data.Id);
         Assert.DoesNotContain(accounts.Data, a => a.Id == accountB.Data.Id);
 
+    }
+
+    [Fact]
+    public async Task DeleteAccount_WhenAccountHasTransactions_ShouldReturnConflict()
+    {
+        // Given
+        var user = await RegisterAndLoginAsync();
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", user.Login.Token);
+
+        var account = await CreateAccountAsync();
+
+        var categoryDto = new CreateCategoryDto()
+        {
+            Name = $"Category {Guid.CreateVersion7()}",
+        };
+
+        var responseCategory = await _client.PostAsJsonAsync("/categories", categoryDto);
+        Assert.Equal(HttpStatusCode.Created, responseCategory.StatusCode);
+
+        var category = await responseCategory.Content.ReadFromJsonAsync<ResponseEnvelope<CategoryResponseDto>>();
+        Assert.NotNull(category);
+        Assert.NotNull(category.Data);
+
+        var dtoTransaction = new CreateTransactionDto()
+        {
+            AccountId = account.Id,
+            CategoryId = category.Data.Id,
+            Description = $"Transaction {Guid.CreateVersion7()}",
+            Amount = 1000m,
+            Type = TransactionType.Expense,
+            TransactionDate = DateOnly.FromDateTime(DateTime.UtcNow)
+        };
+
+        var responseTransaction = await _client.PostAsJsonAsync("/transactions", dtoTransaction);
+        Assert.Equal(HttpStatusCode.Created, responseTransaction.StatusCode);
+
+    
+        // When
+        var response = await _client.DeleteAsync($"/accounts/{account.Id}");
+    
+        // Then
+        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
     }
 }
 
