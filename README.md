@@ -1,6 +1,6 @@
 # 💰 RV Personal Finance
 
-> 🚧 **Status:** In progress — Core API complete with JWT authentication, BCrypt password hashing, authenticated user ownership, full CRUD, field-level validation, standardized responses, EF Core relationships, global exception handling (RFC 7807), health checks, derived balances, and dashboard aggregation. 86 tests total (76 unit: Account, Category and Transaction services, plus validators; 10 integration, via WebApplicationFactory + Testcontainers PostgreSQL) — 10/12 planned integration scenarios done; CI is next.
+> 🚧 **Status:** In progress — Core API complete with JWT authentication, BCrypt password hashing, authenticated user ownership, full CRUD, field-level validation, standardized responses, EF Core relationships, global exception handling (RFC 7807), health checks, derived balances, and dashboard aggregation. Automated test suite complete: 87 tests (76 unit: Account, Category and Transaction services, plus validators; 11 integration, via WebApplicationFactory + Testcontainers PostgreSQL); CI (GitHub Actions) is next.
 
 A personal finance REST API built with **ASP.NET Core Minimal APIs**, **Entity Framework Core** and **PostgreSQL**.
 
@@ -60,7 +60,7 @@ This project is intentionally built **without shortcuts** — each concept is un
 ## 🧪 Tests
 
 - **Unit tests** — xUnit + EF Core InMemory (real `AppDbContext`, real validators, no mocking — service tests run against an in-memory database instead of stubbing the persistence layer). All three services fully covered: `AccountService` (13 scenarios), `CategoryService` (13 scenarios), `TransactionService` (16 scenarios — CRUD, cross-user ownership, validation failures, conflict on delete with linked transactions, and reference validation via `CheckReferencesAsync`: both non-existent references and references that exist but belong to another user). 76 tests total across service and validator suites.
-- **Integration tests** (in progress, 10/12 scenarios) — real HTTP requests against the app hosted in-memory via `WebApplicationFactory`, covering health check, register/login (success and failure paths), protected endpoints (with/without token), cross-user ownership on accounts, and transaction creation (valid references and cross-user account rejection). Remaining: delete-with-linked-transactions conflict, and an unhandled-exception Problem Details scenario.
+- **Integration tests** — real HTTP requests against the app hosted in-memory via `WebApplicationFactory`, covering health check, register/login (success and failure paths), protected endpoints (with/without token), cross-user ownership on accounts, transaction creation (valid references and cross-user account rejection), and delete-with-linked-transactions conflict. 11 scenarios total; a 12th (unhandled-exception → Problem Details) was scoped and deliberately deferred — it would exercise ASP.NET Core's own middleware plumbing rather than this project's domain logic, at a cost disproportionate to its coverage value at this stage.
 - **Isolated PostgreSQL** — each test run spins up a real, disposable Postgres container via **Testcontainers** (`Testcontainers.PostgreSql`), with migrations applied automatically; no dependency on an external database
 
 ---
@@ -88,7 +88,7 @@ RvPersonalFinance/
 │       └── Program.cs         # Application entry point
 │
 ├── tests/
-│   └── RvPersonalFinance.Tests/   # xUnit project (unit + integration tests — in progress)
+│   └── RvPersonalFinance.Tests/   # xUnit project (unit + integration tests)
 │
 ├── docker-compose.yml
 ├── .env                       # Local environment variables (not committed)
@@ -125,7 +125,7 @@ RvPersonalFinance/
 - Docker / Docker Compose
 - xUnit
 - EF Core InMemory (unit tests)
-- WebApplicationFactory + Testcontainers (integration tests, in progress)
+- WebApplicationFactory + Testcontainers (integration tests)
 - ILogger (structured logging)
 
 ---
@@ -219,7 +219,7 @@ http://localhost:5099/scalar
 - [x] JWT authentication
 - [x] User ownership enforcement
 - [x] Unit tests (Account, Category and Transaction services — 76 tests total)
-- [ ] Integration tests (10/12 scenarios — WebApplicationFactory + Testcontainers)
+- [x] Integration tests (11 scenarios — WebApplicationFactory + Testcontainers; 12th scenario scoped and deliberately deferred)
 - [ ] API Dockerfile + CI (GitHub Actions)
 - [ ] Production deploy (home lab)
 
