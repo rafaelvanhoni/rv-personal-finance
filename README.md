@@ -1,6 +1,8 @@
 # 💰 RV Personal Finance
 
-> 🚧 **Status:** In progress — Core API complete with JWT authentication, BCrypt password hashing, authenticated user ownership, full CRUD, field-level validation, standardized responses, EF Core relationships, global exception handling (RFC 7807), health checks, derived balances, and dashboard aggregation. Automated test suite complete: 87 tests (76 unit: Account, Category and Transaction services, plus validators; 11 integration, via WebApplicationFactory + Testcontainers PostgreSQL); CI (GitHub Actions) is next.
+![CI](https://github.com/rafaelvanhoni/rv-personal-finance/actions/workflows/ci.yml/badge.svg)
+
+> ✅ **Status:** v1 technically complete — Core API with JWT authentication, BCrypt password hashing, authenticated user ownership, full CRUD, field-level validation, standardized responses, EF Core relationships, global exception handling (RFC 7807), health checks, derived balances, and dashboard aggregation. Automated test suite: 87 tests (76 unit: Account, Category and Transaction services, plus validators; 11 integration, via WebApplicationFactory + Testcontainers PostgreSQL) — all green in CI (GitHub Actions) on every push/PR to `main`.
 
 A personal finance REST API built with **ASP.NET Core Minimal APIs**, **Entity Framework Core** and **PostgreSQL**.
 
@@ -220,7 +222,8 @@ http://localhost:5099/scalar
 - [x] User ownership enforcement
 - [x] Unit tests (Account, Category and Transaction services — 76 tests total)
 - [x] Integration tests (11 scenarios — WebApplicationFactory + Testcontainers; 12th scenario scoped and deliberately deferred)
-- [ ] API Dockerfile + CI (GitHub Actions)
+- [x] CI (GitHub Actions) — build + `dotnet test` on every push/PR to `main`
+- [ ] API Dockerfile
 - [ ] Production deploy (home lab)
 
 ### 💡 Future ideas (post-MVP)
